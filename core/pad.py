@@ -13,6 +13,7 @@ def kde_2d(attr1, attr2):
     return kde_A, kde_B, kde_A_and_B
 
 def into_grid_prob_2d(pdf_real, pdf_gen, n_points, pooling):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     n_bins = int(np.sqrt(n_points))
     x = np.linspace(-35, 35, n_bins+1)
     y = np.linspace(-35, 35,n_bins+1)
@@ -25,8 +26,8 @@ def into_grid_prob_2d(pdf_real, pdf_gen, n_points, pooling):
     points_gen = pdf_gen(sliced_array)
     reshaped_point_gen = points_gen.reshape(n_bins+1,n_bins+1)  #input = 101,101,2 ,x axis to y axis.. #output = 100,100
   
-    reshaped_point_real_cuda = torch.Tensor(reshaped_point_real).to('cuda')
-    reshaped_point_gen_cuda = torch.Tensor(reshaped_point_gen).to('cuda')
+    reshaped_point_real_cuda = torch.Tensor(reshaped_point_real).to(device)
+    reshaped_point_gen_cuda = torch.Tensor(reshaped_point_gen).to(device)
 
     prob_ori = pooling(reshaped_point_real_cuda.unsqueeze(0)) * ((70/n_bins)*(70/n_bins))
     prob_input = pooling(reshaped_point_gen_cuda.unsqueeze(0)) * ((70/n_bins)*(70/n_bins))

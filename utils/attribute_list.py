@@ -1,5 +1,7 @@
 attr_dict = {}
 
+attr_dict['try_6_USER'] = ["long hair", "short hair", "young", "elder", "makeup", "no makeup"]
+
 attr_dict['ffhq_20_USER'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                              "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", "wearing earlings","beard","double chin", "young"]
                        
@@ -10,7 +12,14 @@ attr_dict['ffhq_20_GPT'] = ['clean-shaven', 'beard', 'mustache', 'Wide-eyed', 't
 attr_dict['celebA_20_USER'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                              "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", "wearing earlings","beard","double chin", "young"]
 
-attr_dict['lsuncat_20_USER'] = ['green eyes', 'blue eyes', 'pink nose', 'black fur', 'white fur', 'yellow eyes', 'fluffy fur', 'solid color', 'black nose',  'tabby pattern', 
+attr_dict['celebA_40_USER'] = ["man", "not man", "woman", "not woman", "child", "not child", "arched eyebrows", "not arched eyebrows", "smiling", "not smiling", "wearing hat",
+                               "not wearing hat", "wearing eyeglasses", "not wearing eyeglasses", "wearing necklace", "not wearing necklace", "blonde hair", "not blonde hair",
+                               "black hair", "not black hair", "bangs", "no bangs", "gray hair", "not gray hair", "wavy hair", "not wavy hair", "bald head", "not bald head",
+                               "red lip", "not red lip", "makeup", "no makeup", "wearing earlings", "not wearing earlings", "beard", "no beard", "double chin", "not double chin",
+                               "young", "not young"]
+
+
+attr_dict['lsuncat_20_USER'] = ['green eyes', 'blue eyes', 'pink nose', 'black fur', 'white fur', 'yellow eyes', 'fluffy fur', 'solid color', 'black nose',  'tabby pattern',
 'white paws', 'gray fur', 'brown fur',   'round eyes', 'calico pattern', 'orange fur', 'pointed ears', 'tufted ears', 'slanted eyes', 'long tail']
 
 attr_dict['lsuncat_20_color'] = ['green fur', 'blue fur', 'white fur', 'black fur', 'yellow fur', 'dotted fur', 'ginger fur', 'orange fur', 'tabby fur', 'siamese fur', 'tortoiseshell fur',
