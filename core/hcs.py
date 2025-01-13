@@ -136,6 +136,26 @@ def get_text_features(text_list):
         text_features = model.encode_text(text)
     return text_features
 
+def get_img_features(img_dir, batch_size=1000):
+    # calculate image features
+    print("calculating image features")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/32", device=device)
+    model.eval()
+    dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False,
+                                             num_workers=2)
+
+    img_features_list = []
+
+    with torch.no_grad():
+        for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):
+            image_features = model.encode_image(datas.to(device))
+            img_features_list.append(image_features)
+
+    img_features = torch.cat(img_features_list)
+    return img_features
 
 def get_hcs_new(img_features_real, img_features_gen, text_features):
     print(f"calculating HCS")
@@ -160,7 +180,8 @@ def get_dualcs(img_features, text_features):
         cs = img_features @ text_features.T
         cs_softmax = torch.softmax(cs.reshape([-1, 20, 2]), dim=2)
         scores = 100 * ((cs_softmax * 2)-1)
-        scores = scores.reshape([-1, 40])
+        # scores = scores.reshape([-1, 40])
+        scores = scores[:, :, 0]
     return scores
 
 

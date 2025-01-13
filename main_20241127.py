@@ -80,7 +80,6 @@ if __name__ == '__main__':
     parser.add_argument('--img_feat_mean_file', type=str, default='./img_feat_mean.pkl')
     parser.add_argument('--text_feat_mean_file', type=str, default='./text_feat_mean.pkl')
     parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_1')
-    parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/smiling_man_non_smiling_woman_1')
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
 

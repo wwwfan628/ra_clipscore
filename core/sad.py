@@ -16,8 +16,11 @@ def into_grid_prob_1d(pdf_ori_1d, pdf_input_1d, n_points):
     return points_ori, points_input
 
 
-def get_SaD(HCS_real, HCS_gen, text_list, n_points):
+def get_SaD(HCS_real, HCS_gen, text_list, n_points, score_type):
     print("calculating stats to get SaD")
+    if score_type=='dualCS':
+        assert len(text_list)%2 == 0
+        text_list = text_list[::2]
     total_num = len(text_list)
     sad_result = np.zeros((total_num,3))  #KL(P,Q) JSD, MI(P,Q)
     eps = 1e-10

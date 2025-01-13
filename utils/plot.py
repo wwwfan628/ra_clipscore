@@ -6,7 +6,10 @@ import math
 from itertools import combinations
 
 
-def plot_SaD(CE_result, text_list, experiment_name, real_dir, gen_dir, n_point):
+def plot_SaD(CE_result, text_list, experiment_name, real_dir, gen_dir, n_point, score_type):
+    if score_type=='dualCS':
+        assert len(text_list)%2 == 0
+        text_list = text_list[::2]
     plot_path = f"figs/{experiment_name}/{real_dir.split('/')[-1]}_{gen_dir.split('/')[-1]}"
     if not os.path.exists(plot_path):
             os.makedirs(plot_path)
@@ -49,8 +52,8 @@ def plot_SaD(CE_result, text_list, experiment_name, real_dir, gen_dir, n_point):
         plt.ylabel('each attribute-pair difference between 2 dataset', fontsize=5)
         
         plt.tight_layout()
-        plt.show()    
-        plt.savefig(f"{plot_path}/n_point_{n_point}_{types}.png", dpi = 500)
+        plt.savefig(f"{plot_path}/n_point_{n_point}_{types}.png", dpi=500)
+        plt.show()
         return value
 
     mean_SaD = save_img_1d(KL, "SaD", result_sorted_KL)
@@ -59,8 +62,11 @@ def plot_SaD(CE_result, text_list, experiment_name, real_dir, gen_dir, n_point):
     return mean_SaD, mean_diff
 
 
-def plot_PaD(CE_results, text_list, experiment_name, real_dir, gen_dir, n_point):
+def plot_PaD(CE_results, text_list, experiment_name, real_dir, gen_dir, n_point, score_type):
     print("calculating PaD")
+    if score_type=='dualCS':
+        assert len(text_list)%2 == 0
+        text_list = text_list[::2]
     plot_path = f"figs/{experiment_name}/{real_dir.split('/')[-1]}_{gen_dir.split('/')[-1]}"  
     if not os.path.exists(plot_path):
             os.makedirs(plot_path)
@@ -103,9 +109,8 @@ def plot_PaD(CE_results, text_list, experiment_name, real_dir, gen_dir, n_point)
         plt.ylabel('each attribute-pair difference between 2 dataset', fontsize=5)
         
         plt.tight_layout()
-        plt.show()    
-        plt.savefig(f"{plot_path}/n_point_{n_point}_{types}.png", dpi = 2000)
-        
+        plt.savefig(f"{plot_path}/n_point_{n_point}_{types}.png", dpi=2000)
+        plt.show()
         return pad_val
 
     pad = save_img(KL, "PaD")

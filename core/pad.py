@@ -36,8 +36,11 @@ def into_grid_prob_2d(pdf_real, pdf_gen, n_points, pooling):
         
 
 
-def get_PaD(HCS_real, HCS_gen, text_list, n_points):
+def get_PaD(HCS_real, HCS_gen, text_list, n_points, score_type):
     print("calculating stats to get PaD")
+    if score_type=='dualCS':
+        assert len(text_list)%2 == 0
+        text_list = text_list[::2]
     pooling = torch.nn.AvgPool2d(kernel_size=2, stride=1)
     corr_total_num = len([a for a in combinations(np.arange(len(text_list)),2)])
     pad_results = torch.zeros((corr_total_num,2)) 
