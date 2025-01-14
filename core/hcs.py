@@ -53,7 +53,7 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000):
     real_dataloader = torch.utils.data.DataLoader(
                 real_dataset, batch_size=batch_size, shuffle=False, num_workers=6)
                 
-    img_mean = img_mean.to(torch.float16)
+    img_mean = img_mean.to(torch.float)
     img_mean = img_mean.unsqueeze(0).to(device)
 
     text_list_prompt = ["a photo of " + a for a in text_list]
@@ -62,7 +62,7 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000):
     
     with torch.no_grad():
         text_features = model.encode_text(text)        
-        similarity_per_attribute = torch.zeros((len(real_dataloader.dataset),attribute_num),dtype=torch.float16).to(device)
+        similarity_per_attribute = torch.zeros((len(real_dataloader.dataset),attribute_num),dtype=torch.float).to(device)
         
         for index, (datas) in tqdm(enumerate(real_dataloader), total = len(real_dataloader)):
             image_features = model.encode_image(datas.to(device))                                

@@ -81,7 +81,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
-    parser.add_argument('--score_type', type=str, default='HCS', help='score type, e.g. HCS or dualCS')
+    parser.add_argument('--score_type', type=str, default='dualCS', help='score type, e.g. HCS or dualCS')
 
     args = parser.parse_args()
     main(args)
