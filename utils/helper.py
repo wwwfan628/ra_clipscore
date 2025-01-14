@@ -11,6 +11,7 @@ def str2bool(v):
         return False
     
 def load_candidate(experiment_name, n_attr, attr_type):
+    experiment_name = experiment_name.rsplit('_', 1)[0]
     text_list = []
     if attr_type== "USER":
         return attr_dict[experiment_name][:n_attr], 0

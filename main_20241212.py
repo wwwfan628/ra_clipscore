@@ -13,7 +13,7 @@ def main(args):
     if args.score_type == 'dualCS':
         args.n_attr *= 2
 
-    experiment_name= f"{args.exp}_{args.n_attr}_{args.attr_type}"
+    experiment_name= f"{args.exp}_{args.n_attr}_{args.attr_type}_{args.score_type}"
 
     text_list, stats = utils.load_candidate(experiment_name=experiment_name, n_attr=args.n_attr, attr_type=args.attr_type)
 
@@ -76,7 +76,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
-    parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_1')
+    parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_2')
     parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/smiling_man_non_smiling_woman_1')
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
