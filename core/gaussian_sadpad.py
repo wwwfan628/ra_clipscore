@@ -25,7 +25,7 @@ def plot_bar(result, labels, name, save_path=None):
     plt.ylabel('each attribute difference between 2 datasets', fontsize=5)
     plt.tight_layout()
     plt.savefig(f"{save_path}/{name}.png", dpi=2000)
-    plt.show()
+    # plt.show()
 
 
 def plot_single(results, attr_list, save_path):

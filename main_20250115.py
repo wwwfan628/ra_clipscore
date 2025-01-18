@@ -14,7 +14,7 @@ def main(args):
     if args.score_type == 'dualCS':
         args.n_attr *= 2
 
-    experiment_name= f"{args.exp}_{args.n_attr}_{args.attr_type}_{args.score_type}"
+    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}_{args.score_type}"
 
     text_list, stats = utils.load_candidate(experiment_name=experiment_name, n_attr=args.n_attr, attr_type=args.attr_type)
     dataset_real = os.path.basename(args.real_dir)
@@ -33,10 +33,10 @@ def main(args):
     else:
         text_features = core.get_text_features(text_list)
         text_mean = text_features.mean(dim=0)
-        if args.score_type == 'dualCS':
-            text_list = text_list[::2]
         with open(f'text_features_{experiment_name}.pkl', 'wb') as f:
             pickle.dump(text_features, f)
+    if args.score_type == 'dualCS':
+        text_list = text_list[::2]
 
     if os.path.exists(f'img_features_{dataset_real}.pkl'):
         with open(f'img_features_{dataset_real}.pkl', 'rb') as f:
@@ -107,8 +107,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
-    parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_1')
-    parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/smiling_man_non_smiling_woman_1')
+    parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5K')
+    parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5k_Eyeglasses_Injection_800')
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
