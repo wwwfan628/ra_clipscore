@@ -56,7 +56,7 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000):
     img_mean = img_mean.to(torch.float)
     img_mean = img_mean.unsqueeze(0).to(device)
 
-    text_list_prompt = ["a photo of " + a for a in text_list]
+    text_list_prompt = [f"This is a photo of {a}." + a for a in text_list]
     text = clip.tokenize(text_list_prompt).to(device)
     attribute_num = len(text_list_prompt)
     
@@ -111,7 +111,7 @@ def get_dualcs_for_one_img(img, text_list):
     model, preprocess = clip.load("ViT-B/32", device=device)
     image = preprocess(Image.open(img)).unsqueeze(0).to(device)
 
-    text_list_prompt = ["This is a photo of " + a for a in text_list]
+    text_list_prompt = [f"This is a photo of {item}." if i == 0 else f"This is a photo without {item}." for item in text_list for i in range(2)]
     text = clip.tokenize(text_list_prompt).to(device)
 
     with torch.no_grad():
@@ -173,12 +173,14 @@ def get_hcs_new(img_features_real, img_features_gen, text_features):
     return similarity
 
 def get_dualcs(img_features, text_features):
+    assert text_features.shape[0] % 2 == 0
+    num_attributs = text_features.shape[0] // 2
     print(f"calculating DualCS")
     with torch.no_grad():
         img_features /= img_features.norm(dim=-1, keepdim=True)
         text_features /= text_features.norm(dim=-1, keepdim=True)
         cs = img_features @ text_features.T
-        cs_softmax = torch.softmax(cs.reshape([-1, 20, 2]), dim=2)
+        cs_softmax = torch.softmax(cs.reshape([-1, num_attributs, 2]), dim=2)
         scores = 100 * ((cs_softmax * 2)-1)
         # scores = scores.reshape([-1, 40])
         scores = scores[:, :, 0]
