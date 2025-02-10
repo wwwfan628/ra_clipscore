@@ -30,5 +30,4 @@ python main_20250130.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_proces
 python main_20250130.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_1 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_process/smiling_man_non_smiling_woman_1 --score_type HCS > output_HCS_nmsw1vssmnw1.log 2>&1;
 python main_20250130.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_process/non_smiling_man_smiling_woman_2 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_process/smiling_man_non_smiling_woman_1 --score_type HCS > output_HCS_nmsw2vssmnw1.log 2>&1;
 
-
-
+echo "Finish!"
