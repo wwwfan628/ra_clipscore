@@ -82,6 +82,20 @@ def main(args):
     pair_attributes_results = core.compute_pair(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
     all_attributes_results = core.compute_all(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
 
+    results_dict = {'forward_KL_single': single_attribute_results[0], 'reverse_KL_single': single_attribute_results[1],
+                    'mean_difference_single': single_attribute_results[2],
+                    'f_distance_single': single_attribute_results[3],
+                    'kernel_distance_single': single_attribute_results[4],
+                    'forward_KL_pair': pair_attributes_results[0], 'reverse_KL_pair': pair_attributes_results[1],
+                    'mean_difference_pair': pair_attributes_results[2], 'f_distance_pair': pair_attributes_results[3],
+                    'kernel_distance_pair': pair_attributes_results[4],
+                    'forward_KL_all': all_attributes_results[0], 'reverse_KL_all': all_attributes_results[1],
+                    'mean_difference_all': all_attributes_results[2], 'f_distance_all': all_attributes_results[3],
+                    'kernel_distance_all': all_attributes_results[4]}
+
+    with open(results_save_path, 'wb') as f:
+        pickle.dump(results_dict, f)
+
     # plot bar diagram and save figures
     core.plot_single(single_attribute_results, text_list, save_dir)
     core.plot_pair(pair_attributes_results, text_list, save_dir)
@@ -92,19 +106,6 @@ def main(args):
           'F-distance: {:.3f}\nKernel distance: {:.3f}\n'.format(
         all_attributes_results[0], all_attributes_results[1], all_attributes_results[2], all_attributes_results[3],
         all_attributes_results[4]))
-
-    results_dict = {'forward_KL_single': single_attribute_results[0], 'reverse_KL_single': single_attribute_results[1],
-                        'mean_difference_single': single_attribute_results[2], 'f_distance_single': single_attribute_results[3],
-                        'kernel_distance_single': single_attribute_results[4],
-                        'forward_KL_pair': pair_attributes_results[0], 'reverse_KL_pair': pair_attributes_results[1],
-                        'mean_difference_pair': pair_attributes_results[2], 'f_distance_pair': pair_attributes_results[3],
-                        'kernel_distance_pair': pair_attributes_results[4],
-                        'forward_KL_all': all_attributes_results[0], 'reverse_KL_all': all_attributes_results[1],
-                        'mean_difference_all': all_attributes_results[2], 'f_distance_all': all_attributes_results[3],
-                        'kernel_distance_all': all_attributes_results[4]}
-
-    with open(results_save_path, 'wb') as f:
-        pickle.dump(results_dict, f)
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time()-start_time))
     print(f'Excution Time: {elapsed}!')
