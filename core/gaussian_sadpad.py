@@ -43,8 +43,43 @@ def plot_single(results, attr_list, save_path):
     return
 
 
+def plot_single_reduced(results, attr_list, save_path):
+    print('###### Plotting results of single attribute ######')
+    attr_list = attr_list[:10]  # only consider human face related attributes
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    save_path = os.path.join(save_path, 'figs_single_attribute')
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    for i, result in enumerate(results):
+        attr_list_sort_by_result = [attr_list[j] for j in result.argsort()[::-1]]
+        result[::-1].sort()
+        plot_bar(result, attr_list_sort_by_result, results_contents[i], save_path)
+    return
+
+
 def plot_pair(results, attr_list, save_path, max_bar=20):
     print('###### Plotting results of pair attributes ######')
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    save_path = os.path.join(save_path, 'figs_pair_attributes')
+
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    pair_attr_list = [pair for pair in combinations(attr_list, 2)]
+    max_bar = min(max_bar, len(pair_attr_list))
+
+    for i, result in enumerate(results):
+        pair_attr_list_sort_by_result = [str(pair_attr_list[j]) for j in result.argsort()[::-1]]
+        result[::-1].sort()
+        plot_bar(result[:max_bar], pair_attr_list_sort_by_result[:max_bar], results_contents[i], save_path)
+    return
+
+
+def plot_pair_reduced(results, attr_list, save_path, max_bar=20):
+    print('###### Plotting results of pair attributes ######')
+    attr_list = attr_list[:10]  # only consider human face related attributes
     results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
     save_path = os.path.join(save_path, 'figs_pair_attributes')
 
@@ -95,8 +130,78 @@ def compute_single(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov
     return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(kernel_distance_single)]
 
 
+def compute_single_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
+    print('###### Computing for single attribute ######')
+    attr_list = attr_list[:10]  # only consider human face related attributes
+    # single attribute
+    difference_single = []
+    KL_real_gen_single = []
+    KL_gen_real_single = []
+    f_distance_single = []
+    kernel_distance_single = []
+
+    for n, i in tqdm(enumerate(np.arange(len(attr_list))), total=len(attr_list)):
+        real_mean_i = np.expand_dims(real_mean, 1)[i]
+        gen_mean_i = np.expand_dims(gen_mean, 1)[i]
+        # variance: diagonal elements of covariance matrix
+        real_var_i = np.expand_dims(real_cov, [2, 3])[i, i]
+        gen_var_i = np.expand_dims(gen_cov, [2, 3])[i, i]
+        real_score_i = np.expand_dims(real_score[:, i], 1)
+        gen_score_i = np.expand_dims(gen_score[:, i], 1)
+
+        # difference of mean values
+        difference_single.append(float(abs(gen_mean_i - real_mean_i)))
+
+        KL_real_gen_single.append(compute_KL_divergence_1d_gaussian_pdf(real_mean_i, gen_mean_i, real_var_i, gen_var_i))
+
+        KL_gen_real_single.append(compute_KL_divergence_1d_gaussian_pdf(gen_mean_i, real_mean_i, gen_var_i, real_var_i))
+
+        # Frechet Distance
+        f_distance_single.append(compute_frechet_distance(real_mean_i, gen_mean_i, real_var_i, gen_var_i))
+
+        # Kernel Distance
+        kernel_distance_single.append(compute_kernel_distance(real_score_i, gen_score_i))
+
+    return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(kernel_distance_single)]
+
+
+
 def compute_pair(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
     print('###### Computing for pair attributes ######')
+    # pair attributes
+    difference_pair = []
+    KL_real_gen_pair = []
+    KL_gen_real_pair = []
+    f_distance_pair = []
+    kernel_distance_pair = []
+
+    for n, (i, j) in tqdm(enumerate(combinations(np.arange(len(attr_list)), 2)), total=len(list(combinations(attr_list, 2)))):
+        real_mean_ij = real_mean[[i, j]]
+        gen_mean_ij = gen_mean[[i, j]]
+        real_cov_ij = real_cov[[i, i, j, j], [i, j, i, j]].reshape([2,2])
+        gen_cov_ij = gen_cov[[i, i, j, j], [i, j, i, j]].reshape([2,2])
+        real_score_ij = real_score[:, [i, j]]
+        gen_score_ij = gen_score[:, [i, j]]
+
+        # difference of mean values
+        difference_pair.append(float(abs(real_mean_ij - gen_mean_ij).sum()))
+
+        KL_real_gen_pair.append(compute_KL_divergence_high_dim_gaussian_pdf(real_mean_ij, gen_mean_ij, real_cov_ij, gen_cov_ij))
+
+        KL_gen_real_pair.append(compute_KL_divergence_high_dim_gaussian_pdf(gen_mean_ij, real_mean_ij, gen_cov_ij, real_cov_ij))
+
+        # Frechet Distance
+        f_distance_pair.append(compute_frechet_distance(real_mean_ij, gen_mean_ij, real_cov_ij, gen_cov_ij))
+
+        # Kernel Distance
+        kernel_distance_pair.append(compute_kernel_distance(real_score_ij, gen_score_ij))
+
+    return [np.array(KL_real_gen_pair), np.array(KL_gen_real_pair), np.array(difference_pair), np.array(f_distance_pair), np.array(kernel_distance_pair)]
+
+
+def compute_pair_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
+    print('###### Computing for pair attributes ######')
+    attr_list = attr_list[:10]  # only consider human face related attributes
     # pair attributes
     difference_pair = []
     KL_real_gen_pair = []

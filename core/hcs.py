@@ -181,7 +181,9 @@ def get_dualcs(img_features, text_features):
         text_features /= text_features.norm(dim=-1, keepdim=True)
         cs = img_features @ text_features.T
         cs_softmax = torch.softmax(cs.reshape([-1, num_attributs, 2]), dim=2)
-        scores = 100 * ((cs_softmax * 2)-1)
+        # scores = 100 * ((cs_softmax * 2)-1)
+        scores = 100 * cs_softmax
+        # scores = 100 * (cs_softmax>=0.5).float()
         # scores = scores.reshape([-1, 40])
         scores = scores[:, :, 0]
     return scores
