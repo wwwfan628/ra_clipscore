@@ -168,7 +168,7 @@ def get_hcs_new(img_features_real, img_features_gen, text_features):
     text_features = text_features - text_mean
     img_features /= img_features.norm(dim=-1, keepdim=True)
     text_features /= text_features.norm(dim=-1, keepdim=True)
-    similarity = (100.0 * img_features @ text_features.T)
+    similarity = (100 * img_features @ text_features.T)
 
     return similarity
 
@@ -189,6 +189,36 @@ def get_dualcs(img_features, text_features):
     return scores
 
 
+def get_hcs_scaled(img_features, text_features):
+    print(f"calculating Scaled HCS")
+    img_features /= img_features.norm(dim=-1, keepdim=True)
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+    cs = img_features @ text_features.T
+    cs_softmax = torch.softmax(cs, dim=1)
+    scores = 100 * cs_softmax
+    return scores
+
+
+def get_original_cs(img_features, text_features):
+    print(f"calculating Original CS")
+    img_features /= img_features.norm(dim=-1, keepdim=True)
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+    scores = 100 * (img_features @ text_features.T)
+    return scores
+
+
+def get_hcs_without_minus_mean_text_features(img_features_real, img_features_gen, text_features):
+    print(f"calculating HCS without minus mean text features")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    img_mean = torch.mean(img_features_real, axis=0)
+    img_mean = img_mean.unsqueeze(0).to(device)
+
+    img_features = img_features_gen - img_mean
+    img_features /= img_features.norm(dim=-1, keepdim=True)
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+    similarity = (100 * img_features @ text_features.T)
+
+    return similarity
 
 #########################################********************************************************
 
