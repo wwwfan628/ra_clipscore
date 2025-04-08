@@ -6,8 +6,6 @@ import torchvision
 import eval_clip
 from utils import *
 
-from config import setup_cfg
-
 from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from tqdm import tqdm
