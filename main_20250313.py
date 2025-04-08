@@ -120,7 +120,7 @@ if __name__ == '__main__':
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
     parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5K')
     parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5k_Eyeglasses_Injection_800')
-    parser.add_argument('--n_attr', type=int, default=50, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--n_attr', type=int, default=22, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
     parser.add_argument('--score_type', type=str, default='dualCS', help='score type, e.g. HCS or dualCS')

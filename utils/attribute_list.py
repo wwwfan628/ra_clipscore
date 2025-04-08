@@ -9,6 +9,11 @@ attr_dict['celebA_50_USER'] = ['male', 'heavy makeup', 'wearing earrings', 'blac
                              'carpet', 'television', 'refrigerator', 'washing machine', 'microwave oven', 'bowl',
                              'plate', 'cup', 'curtain', 'pillow', 'clock', 'computer']
 
+attr_dict['celebA_22_USER'] = ['male', 'heavy makeup', 'wearing earrings', 'black hair', 'blond hair',
+                               'wearing eyeglasses', 'wearing hat', 'young', 'with beard', 'smiling',
+                               'giraffe', 'zebra', 'penguin', 'sofa', 'chair', 'nightstand', 'carpet', 'refrigerator',
+                               'washing machine', 'microwave oven', 'curtain', 'pillow']
+
 # attr_dict['try_70_USER'] = ["long hair", "short hair", "young", "elder", "makeup", "no makeup", "table", "no table", "chair", "no chair", "bookshelf", "no bookshelf", "desk", "no desk", "mirror", "no mirror", "bed", "no bed", "lamp", "no lamp", "TV", "no TV", "washing machine", "no washing machine", "telephone", "no telephone",
 #                             "dolphin", "no dolphin", "cat", "no cat", "dog", "no dog", "shells", "no shells", "shark", "no shark", "whale", "no whale", "jellyfish", "no jellyfish",
 #                             "dragonfly", "no dragonfly", "bee", "no bee", "beetle", "no beetle", "butterfly", "no butterfly", "ant", "no ant", "tiger", "no tiger", "lion", "no lion", "cow", "no cow", "chicken", "no chicken",
