@@ -54,7 +54,6 @@ def get_img_features_eval_clip(img_dir, batch_size=1000):
 
 def get_evalcs(img_features, text_features):
     assert text_features.shape[0] % 2 == 0
-    num_attributs = text_features.shape[0] // 2
     print(f"calculating EvalCS")
 
     # normalize features
@@ -75,5 +74,13 @@ def get_evalcs(img_features, text_features):
     logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
     Softmax = torch.nn.Softmax(dim=1)
     scores = Softmax(logits).cpu()[:, 1]    # [5000, 22]
+
+    # # Class-Specific Region Feature Aggregation
+    # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+    # b, a, p = output.shape  # b 5000 c 44 p 50
+    # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
+    # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
+    # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]
+    # scores = 5 * (scores_per_patch * w).sum(-1)  # [5000, 22]
     return scores
 

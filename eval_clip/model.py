@@ -54,7 +54,7 @@ class Bottleneck(nn.Module):
 
 
 class AttentionPool2d(nn.Module):
-    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None):
+    def __init__(self, spacial_dim: int, embed_dim: int, num_heads: int, output_dim: int = None):   # AttentionPool2d(input_resolution // 32, self.embed_dim, heads, output_dim)
         super().__init__()
         self.positional_embedding = nn.Parameter(torch.randn(spacial_dim ** 2 + 1, embed_dim) / embed_dim ** 0.5)
         self.k_proj = nn.Linear(embed_dim, embed_dim)
@@ -105,7 +105,7 @@ class AttentionPool2d(nn.Module):
 
 
 class AttentionConv(nn.Module):
-    def __init__(self, embed_dim: int, spec_dim: int,  output_dim: int = None):
+    def __init__(self, embed_dim: int, spec_dim: int,  output_dim: int = None): # AttentionConv(self.embed_dim, input_resolution // 32, output_dim)
         super().__init__()
         self.spec_dim = spec_dim
         self.positional_embedding = nn.Parameter(torch.randn(spec_dim ** 2 +1, embed_dim) / embed_dim ** 0.5)
@@ -115,17 +115,17 @@ class AttentionConv(nn.Module):
         self.c_proj = nn.Linear(embed_dim, output_dim or embed_dim)
 
     def forward(self, x):
-        _, _, h, w = x.shape
+        _, _, h, w = x.shape    # x.size [1000, 2048, 7, 7]  (line 189: torch.nn.AdaptiveAvgPool2d(7) resize the last two dimensions to 7 times 7)
         if h * w + 1 != self.positional_embedding.shape[0]:
             w_spacial = self.positional_embedding[1:].permute(1, 0).reshape(1, -1, self.spec_dim, self.spec_dim)
             w_spacial = F.interpolate(w_spacial, size=(h, w), mode='bicubic')
             w_special = w_spacial.reshape(-1, h * w).permute(1, 0)
             positional_embedding = torch.cat([self.positional_embedding[:1], w_special], dim=0)
         else:
-            positional_embedding = self.positional_embedding
-        x = x.reshape(x.shape[0], x.shape[1], x.shape[2] * x.shape[3]).permute(2, 0, 1)  # NCHW -> (HW)NC
-        x = torch.cat([x.mean(dim=0, keepdim=True), x], dim=0)  # (HW+1)NC
-        x = x + positional_embedding[:, None, :].to(x.dtype)  # (HW+1)NC
+            positional_embedding = self.positional_embedding    # size [50, 2048]
+        x = x.reshape(x.shape[0], x.shape[1], x.shape[2] * x.shape[3]).permute(2, 0, 1)  # NCHW -> (HW)NC  x.size [49, 1000, 2048]
+        x = torch.cat([x.mean(dim=0, keepdim=True), x], dim=0)  # (HW+1)NC  x.size [50, 1000, 2048]
+        x = x + positional_embedding[:, None, :].to(x.dtype)  # (HW+1)NC    [50, 1000, 2048] + [50, 1, 2048] = [50, 1000, 2048]
         with torch.no_grad():
             x1, attn_weights = F.multi_head_attention_forward(
                 query=x, key=x, value=x,
@@ -146,12 +146,12 @@ class AttentionConv(nn.Module):
                 training=self.training,
                 need_weights=True,
                 average_attn_weights=True
-            )
-        x2 = F.linear(x, self.v_proj.weight, self.v_proj.bias)
-        x2 = F.linear(x2, self.c_proj.weight, self.c_proj.bias)
+            )       # x1.size [50, 1000, 512]   attn_weights.size [1000, 50, 50]
+        x2 = F.linear(x, self.v_proj.weight, self.v_proj.bias)  # x2.size [50, 1000, 2048]
+        x2 = F.linear(x2, self.c_proj.weight, self.c_proj.bias) # x2.size [50, 1000, 512]  n_patches, n_batch, n_embedding
         # x2 dimension is [50, 32, 1024]
-        x2 = x2.permute(1, 2, 0)
-        return x2, attn_weights[:, :1]
+        x2 = x2.permute(1, 2, 0)    # x2.size [1000, 512, 50]
+        return x2, attn_weights[:, :1]  # [1000, 512, 50] [1000, 1, 50]
 
 
 
@@ -274,7 +274,7 @@ class ModifiedResNet_conv_proj(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x, attn_weights = self.attnpool(x)
-        return x, attn_weights
+        return x, attn_weights  # [1000, 512, 50], [1000, 1, 50]
 
 
 

@@ -7,7 +7,9 @@ import natsort
 from tqdm import tqdm
 import re
 import clip
+import eval_clip
 import pickle
+
 
 class CustomDataSet(Dataset):
     def __init__(self, main_dir, transform, anno_file_path='/Users/yifanlu/Desktop/Datasets/CelebA/Anno/list_attr_celeba.txt'):
@@ -39,7 +41,8 @@ def get_img_features(img_dir, batch_size=1000):
     # calculate image features
     print("calculating image features")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    # model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = eval_clip.load("RN101", device=device)
     model.eval()
     dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
 
@@ -50,18 +53,21 @@ def get_img_features(img_dir, batch_size=1000):
     labels_list = []
     with torch.no_grad():
         for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):
-            image_features = model.encode_image(datas[0].to(device))
+            # image_features = model.encode_image(datas[0].to(device))
+            image_features, _ = model.encode_image(datas[0].to(device))
             img_features_list.append(image_features)
             labels_list.append(datas[1])
 
     img_features = torch.cat(img_features_list)
     labels = torch.cat(labels_list)
     return img_features, labels
+    # return labels
 
 if __name__ == '__main__':
     img_features, labels = get_img_features('/Users/yifanlu/Desktop/Datasets/CelebA5k_furniture15k')
-    with open(f'img_features_try.pkl', 'wb') as f:
+    # labels = get_img_features('/Users/yifanlu/Desktop/Datasets/CelebA5k_furniture15k')
+    with open(f'img_features_local.pkl', 'wb') as f:
         pickle.dump(img_features, f)
 
-    with open(f'img_labels_smiling.pkl', 'wb') as f:
+    with open(f'img_labels_blackhair.pkl', 'wb') as f:
         pickle.dump(labels, f)

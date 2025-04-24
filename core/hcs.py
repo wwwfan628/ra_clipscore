@@ -6,11 +6,12 @@ import os
 import torchvision
 from utils import *
 
+CLIP_BACKBONE = "ViT-B/32"   # "RN101"    # "ViT-B/32"
 
-def get_text_mean(text_list):
+def get_text_mean(text_list, clip_backbone=CLIP_BACKBONE):
     print("calculating text mean")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     
     with torch.no_grad():
         text = clip.tokenize(text_list).to(device)
@@ -22,10 +23,10 @@ def get_text_mean(text_list):
     return text_mean 
 
 
-def get_img_mean(img_dir, batch_size):
+def get_img_mean(img_dir, batch_size, clip_backbone=CLIP_BACKBONE):
     print("calculating image mean")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     model.eval()
     #real_dataset = torchvision.datasets.DatasetFolder(root=f"{img_dir}", loader=custom_loader, transform=preprocess, extensions=) 
     real_dataset = CustomDataSet(main_dir=f"{img_dir}", transform=preprocess)
@@ -45,10 +46,10 @@ def get_img_mean(img_dir, batch_size):
     return img_mean
 
 
-def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000):
+def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000, clip_backbone=CLIP_BACKBONE):
     print(f"calculating HCS for {img_dir}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     real_dataset = CustomDataSet(main_dir=f"{img_dir}", transform=preprocess)
     real_dataloader = torch.utils.data.DataLoader(
                 real_dataset, batch_size=batch_size, shuffle=False, num_workers=6)
@@ -81,10 +82,10 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000):
 
 #########################################################################################################################
 
-def get_hcs_for_one_img(img, img_mean, text_mean, text_list):
+def get_hcs_for_one_img(img, img_mean, text_mean, text_list, clip_backbone=CLIP_BACKBONE):
     print(f"calculating HCS for {img}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     image = preprocess(Image.open(img)).unsqueeze(0).to(device)
 
     img_mean = img_mean.to(torch.float16)
@@ -105,10 +106,10 @@ def get_hcs_for_one_img(img, img_mean, text_mean, text_list):
 
 
 
-def get_dualcs_for_one_img(img, text_list):
+def get_dualcs_for_one_img(img, text_list, clip_backbone=CLIP_BACKBONE):
     print(f"calculating DualCS for {img}")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     image = preprocess(Image.open(img)).unsqueeze(0).to(device)
 
     text_list_prompt = [f"This is a photo of {item}." if i == 0 else f"This is a photo without {item}." for item in text_list for i in range(2)]
@@ -126,21 +127,21 @@ def get_dualcs_for_one_img(img, text_list):
     return scores.squeeze()
 
 
-def get_text_features(text_list):
+def get_text_features(text_list, clip_backbone=CLIP_BACKBONE):
     print("calculating text features")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
 
     with torch.no_grad():
         text = clip.tokenize(text_list).to(device)
         text_features = model.encode_text(text)
     return text_features
 
-def get_img_features(img_dir, batch_size=1000):
+def get_img_features(img_dir, batch_size=1000, clip_backbone=CLIP_BACKBONE):
     # calculate image features
     print("calculating image features")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = clip.load("ViT-B/32", device=device)
+    model, preprocess = clip.load(clip_backbone, device=device)
     model.eval()
     dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
 

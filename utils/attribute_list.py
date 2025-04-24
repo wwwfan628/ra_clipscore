@@ -1,5 +1,7 @@
 attr_dict = {}
 
+attr_dict['celebA_2_USER'] = ['man', 'table']
+
 attr_dict['celebA_50_USER'] = ['male', 'heavy makeup', 'wearing earrings', 'black hair', 'blond hair',
                              'wearing eyeglasses', 'wearing hat', 'young', 'with beard', 'smiling',
                              'dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
