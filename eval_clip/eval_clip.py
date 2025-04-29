@@ -9,7 +9,7 @@ from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
 from tqdm import tqdm
 
-from .model import build_model, build_model_conv_proj
+from .model import build_model, build_model_conv_proj, build_model_vit_local
 from .simple_tokenizer import SimpleTokenizer as _Tokenizer
 
 try:
@@ -128,7 +128,8 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
         state_dict = torch.load(model_path, map_location="cpu")
 
     if not jit:
-        model = build_model_conv_proj(state_dict or model.state_dict()).to(device)
+        # model = build_model_conv_proj(state_dict or model.state_dict()).to(device)
+        model = build_model_vit_local(state_dict or model.state_dict()).to(device)
         if str(device) == "cpu":
             model.float()
         return model, _transform(model.visual.input_resolution)

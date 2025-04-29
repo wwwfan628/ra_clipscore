@@ -46,6 +46,7 @@ def get_img_features_eval_clip(img_dir, batch_size=1000):
     with torch.no_grad():
         for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):
             image_features, _ = model.encode_image(datas.to(device))   # datas [1000, 3, 224, 224]  image features [1000, 512, 50]
+            # image_features = model.encode_image(datas.to(device))
             img_features_list.append(image_features)
 
     img_features = torch.cat(img_features_list) # [5000, 512, 50]
