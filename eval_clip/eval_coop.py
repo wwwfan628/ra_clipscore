@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from .eval_clip import *
-from .eval_clip.simple_tokenizer import SimpleTokenizer as _Tokenizer
+from eval_clip import *
+from .simple_tokenizer import SimpleTokenizer as _Tokenizer
 from copy import deepcopy
 import torch.nn.functional as F
 
@@ -39,8 +39,8 @@ class MLCPromptLearner(nn.Module):
     def __init__(self, attributes, clip_model):
         super().__init__()
         n_attrs = len(attributes)
-        n_ctx_pos = 16    # 16
-        n_ctx_neg = 16  # 16
+        n_ctx_pos = 64    # 16
+        n_ctx_neg = 64  # 16
         ctx_init_pos = ""    # ""
         ctx_init_neg = ""    # ""
         dtype = clip_model.dtype    # torch.float32
@@ -52,8 +52,8 @@ class MLCPromptLearner(nn.Module):
             ctx_init_neg = ctx_init_neg.replace("_", " ")
             n_ctx_pos = len(ctx_init_pos.split(" "))    # 1
             n_ctx_neg = len(ctx_init_neg.split(" "))
-            prompt_pos = clip.tokenize(ctx_init_pos)    # [1, 77]
-            prompt_neg = clip.tokenize(ctx_init_neg)
+            prompt_pos = eval_clip.tokenize(ctx_init_pos)    # [1, 77]
+            prompt_neg = eval_clip.tokenize(ctx_init_neg)
             with torch.no_grad():
                 embedding_pos = clip_model.token_embedding(prompt_pos).type(dtype)    # [1, 77, 512]
                 embedding_neg = clip_model.token_embedding(prompt_neg).type(dtype)
@@ -101,8 +101,8 @@ class MLCPromptLearner(nn.Module):
         tokenized_prompts_pos = []
         tokenized_prompts_neg = []
         for p_pos, p_neg in zip(prompts_pos, prompts_neg):
-            tokenized_prompts_pos.append(clip.tokenize(p_pos))
-            tokenized_prompts_neg.append(clip.tokenize(p_neg))
+            tokenized_prompts_pos.append(eval_clip.tokenize(p_pos))
+            tokenized_prompts_neg.append(eval_clip.tokenize(p_neg))
         tokenized_prompts_pos = torch.cat(tokenized_prompts_pos)    # [n_attrs, 77]
         tokenized_prompts_neg = torch.cat(tokenized_prompts_neg)
         with torch.no_grad():
@@ -178,7 +178,7 @@ class EvalCoop(nn.Module):
     def forward(self, image):
         # get image and text features
         image_features, attn_weights = self.image_encoder(image.type(self.dtype))
-        prompts, tokenized_prompts = self.prompt_learner(cls_id)
+        prompts, tokenized_prompts = self.prompt_learner()
         text_features = self.text_encoder(prompts, tokenized_prompts)
 
         # normalize features
@@ -243,7 +243,7 @@ def evalcoop(attributes, **kwargs):
     for param in attn_params:
         param.requires_grad_(False)
 
-    if torch.cuda.is_available() and cfg.USE_CUDA:
+    if torch.cuda.is_available():
         device = torch.device("cuda")
     else:
         device = torch.device("cpu")
