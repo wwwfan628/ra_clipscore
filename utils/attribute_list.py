@@ -1,6 +1,6 @@
 attr_dict = {}
 
-attr_dict['celebA_2_USER'] = ['man', 'table']
+attr_dict['celebA_3_USER'] = ['male', 'smile', 'eyeglasses']
 
 attr_dict['celebA_50_USER'] = ['male', 'heavy makeup', 'wearing earrings', 'black hair', 'blond hair',
                              'wearing eyeglasses', 'wearing hat', 'young', 'with beard', 'smiling',

@@ -1,231 +1,211 @@
+import torch
+from torch import nn
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, average_precision_score
 import os
-import sys
-import torch.nn.parallel
-import torch.optim
-import torch.utils.data
-import torch.utils.data.distributed
+import pandas as pd
+import torch
+from torch.utils.data import Dataset
+from PIL import Image
+from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
+try:
+    from torchvision.transforms import InterpolationMode
+    BICUBIC = InterpolationMode.BICUBIC
+except ImportError:
+    BICUBIC = Image.BICUBIC
 
-from models import build_model
-from utils.validations import validate_zsl
-from opts import arg_parser
-from dataloaders import build_dataset
-from utils.build_cfg import setup_cfg
-from dassl.optim import build_optimizer, build_lr_scheduler
-from utils.trainers import train_coop
-from utils.helper import save_checkpoint
-
-
-def main():
-    global args
-    parser = arg_parser()
-    args = parser.parse_args()
-    cfg = setup_cfg(args)
-
-    # building the train and val dataloaders
-    train_split = cfg.DATASET.TRAIN_SPLIT
-    val_split = cfg.DATASET.VAL_SPLIT
-    val_gzsl_split = cfg.DATASET.VAL_GZSL_SPLIT
-    train_dataset = build_dataset(cfg, train_split, cfg.DATASET.ZS_TRAIN)
-    train_cls_id = train_dataset.cls_id
-    val_gzsi_dataset = build_dataset(cfg, val_gzsl_split, cfg.DATASET.ZS_TEST)
-    val_gzsi_cls_id = val_gzsi_dataset.cls_id
-    val_unseen_dataset = build_dataset(cfg, val_split, cfg.DATASET.ZS_TEST_UNSEEN)
-    val_unseen_cls_id = val_unseen_dataset.cls_id
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=cfg.DATALOADER.TRAIN_X.BATCH_SIZE,
-                                             shuffle=cfg.DATALOADER.TRAIN_X.SHUFFLE,
-                                             num_workers=cfg.DATALOADER.NUM_WORKERS, pin_memory=True)
-    val_gzsi_loader = torch.utils.data.DataLoader(val_gzsi_dataset, batch_size=cfg.DATALOADER.VAL.BATCH_SIZE,
-                                                  shuffle=cfg.DATALOADER.VAL.SHUFFLE,
-                                                  num_workers=cfg.DATALOADER.NUM_WORKERS, pin_memory=True)
-    val_unseen_loader = torch.utils.data.DataLoader(val_unseen_dataset, batch_size=cfg.DATALOADER.VAL.BATCH_SIZE,
-                                                    shuffle=cfg.DATALOADER.VAL.SHUFFLE,
-                                                    num_workers=cfg.DATALOADER.NUM_WORKERS, pin_memory=True)
-    classnames = train_dataset.classnames
-    cls_id = {'train': train_cls_id, 'val_gzsi': val_gzsi_cls_id, 'val_unseen': val_unseen_cls_id}
-
-    test_split = cfg.DATASET.TEST_SPLIT
-    test_gzsl_split = cfg.DATASET.TEST_GZSL_SPLIT
-    test_gzsi_dataset = build_dataset(cfg, test_gzsl_split, cfg.DATASET.ZS_TEST)
-    test_gzsi_cls_id = test_gzsi_dataset.cls_id
-    test_unseen_dataset = build_dataset(cfg, test_split, cfg.DATASET.ZS_TEST_UNSEEN)
-    test_unseen_cls_id = test_unseen_dataset.cls_id
-    test_gzsi_loader = torch.utils.data.DataLoader(test_gzsi_dataset, batch_size=cfg.DATALOADER.TEST.BATCH_SIZE,
-                                                  shuffle=cfg.DATALOADER.TEST.SHUFFLE,
-                                                  num_workers=cfg.DATALOADER.NUM_WORKERS, pin_memory=True)
-    test_unseen_loader = torch.utils.data.DataLoader(test_unseen_dataset, batch_size=cfg.DATALOADER.TEST.BATCH_SIZE,
-                                                    shuffle=cfg.DATALOADER.TEST.SHUFFLE,
-                                                    num_workers=cfg.DATALOADER.NUM_WORKERS, pin_memory=True)
+from torch.utils.data import random_split, DataLoader
+import argparse
+from eval_clip import evalcoop
+from utils.attribute_list import *
 
 
-    # build the model
-    model, arch_name = build_model(cfg, args, classnames)
+class CelebADataset(Dataset):
+    def __init__(self, root_dir, attr_file='Anno/list_attr_celeba.txt', img_dir='Img', transform=None, selected_attrs=None):
+        """
+        root_dir: path to CelebA root directory
+        attr_file: file with attributes
+        img_dir: subdirectory with images
+        transform: torchvision transforms
+        selected_attrs: list of attribute names to use (None = all 40)
+        """
+        self.root_dir = root_dir
+        self.attr_path = os.path.join(root_dir, attr_file)
+        self.img_dir = os.path.join(root_dir, img_dir)
+        self.transform = transform
+
+        # Load attributes
+        df = pd.read_csv(self.attr_path, header=[0], delimiter=r"\s+")
+        df = df.replace(-1, 0)  # Convert -1 to 0 for binary classification
+
+        # Filter attributes
+        if selected_attrs is not None:
+            self.attr_names = selected_attrs
+            self.attrs = df[selected_attrs].values.astype('float32')
+        else:
+            self.attr_names = df.columns.tolist()
+            self.attrs = df.values.astype('float32')
+
+        self.filenames = df.index.tolist()
+
+    def __len__(self):
+        return len(self.filenames)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.filenames[idx])
+        image = Image.open(img_path)
+
+        if self.transform:
+            image = self.transform(image)
+
+        label = torch.tensor(self.attrs[idx], dtype=torch.float32)
+        return image, label
+
+
+def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=10):
+    model.to(device)
+
+    for epoch in range(num_epochs):
+        model.train()
+        running_loss = 0.0
+
+        for inputs, labels in train_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device).float()  # Multi-label requires float targets
+
+            outputs = model(inputs)
+            loss = loss_fn(outputs, labels)
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+            running_loss += loss.item() * inputs.size(0)
+
+        avg_train_loss = running_loss / len(train_loader.dataset)
+
+        val_loss, metrics = validate_model(model, val_loader, loss_fn, device)
+
+        print(f"Epoch {epoch+1}/{num_epochs}")
+        print(f"Train Loss: {avg_train_loss:.4f} | Val Loss: {val_loss:.4f}")
+        print(f"Val Acc: {metrics['accuracy']:.4f} | "
+              f"Precision: {metrics['precision']:.4f} | "
+              f"Recall: {metrics['recall']:.4f} | "
+              f"F1: {metrics['f1']:.4f} | mAP: {metrics['mAP']:.4f}")
+        print("-" * 80)
+
+
+def validate_model(model, val_loader, loss_fn, device):
+    model.eval()
+    running_loss = 0.0
+
+    all_preds = []
+    all_probs = []
+    all_targets = []
+
+    with torch.no_grad():
+        for inputs, labels in val_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device).float()
+
+            probs = model(inputs)
+            loss = loss_fn(probs, labels)
+
+            running_loss += loss.item() * inputs.size(0)
+
+            preds = (probs > 0.5).int()
+            targets = labels.cpu().int()
+
+            all_preds.append(preds)
+            all_probs.append(probs)
+            all_targets.append(targets)
+
+    all_preds = torch.cat(all_preds).numpy()
+    all_probs = torch.cat(all_probs).numpy()
+    all_targets = torch.cat(all_targets).numpy()
+
+    # Metrics
+    accuracy = accuracy_score(all_targets, all_preds)
+    precision = precision_score(all_targets, all_preds, average='samples', zero_division=0)
+    recall = recall_score(all_targets, all_preds, average='samples', zero_division=0)
+    f1 = f1_score(all_targets, all_preds, average='samples', zero_division=0)
+    mAP = average_precision_score(all_targets, all_probs, average='samples')
+
+    avg_loss = running_loss / len(val_loader.dataset)
+
+    return avg_loss, {
+        'accuracy': accuracy,
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+        'mAP': mAP
+    }
+
+
+def _convert_image_to_rgb(image):
+    return image.convert("RGB")
+
+
+def _transform(n_px):
+    return Compose([
+        Resize(n_px, interpolation=BICUBIC),
+        CenterCrop(n_px),
+        _convert_image_to_rgb,
+        ToTensor(),
+        Normalize((0.48145466, 0.4578275, 0.40821073), (0.26862954, 0.26130258, 0.27577711)),
+    ])
+
+
+
+def main(args):
+
+    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}"
+
+    text_list = attr_dict[experiment_name][:args.n_attr]
+
+    model = evalcoop(text_list)
+
+    selected_attrs = ['Male', 'Smiling', 'Eyeglasses']  # choose what you need
+
+    transform = _transform(model.image_encoder.input_resolution)
+
+    # Create full dataset
+    dataset = CelebADataset(
+        root_dir=args.dataset_dir,
+        selected_attrs=selected_attrs,
+        transform=transform
+    )
+
+    # Define split sizes (e.g., 80% train, 20% val)
+    val_ratio = 0.2
+    val_size = int(len(dataset) * val_ratio)
+    train_size = len(dataset) - val_size
+
+    # Random split
+    generator = torch.Generator().manual_seed(42)  # fix seed
+    train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
+
+    # Create data loaders
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    loss_fn = nn.BCELoss()
     try:
-        prompt_params = model.prompt_params()
+        optimizer = torch.optim.Adam(model.prompt_params(), lr=1e-3)
     except:
-        prompt_params = model.module.prompt_params()
-    prompt_group = {'params': prompt_params}
-    print('num of params in prompt learner: ', len(prompt_params))
-    sgd_polices = [prompt_group]
-    if cfg.TRAINER.FINETUNE_BACKBONE:
-        try:
-            backbone_params = model.backbone_params()
-        except:
-            backbone_params = model.module.backbone_params()
-        print('num of params in backbone: ', len(backbone_params))
-        base_group = {'params': backbone_params, 'lr': cfg.OPTIM.LR * cfg.OPTIM.BACKBONE_LR_MULT}
-        sgd_polices.append(base_group)
+        optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-3)
 
-    if cfg.TRAINER.FINETUNE_ATTN:
-        try:
-            attn_params = model.attn_params()
-        except:
-            attn_params = model.module.attn_params()
-        print('num of params in attn layer: ', len(attn_params))
-        attn_group = {'params': attn_params, 'lr': cfg.OPTIM.LR * cfg.OPTIM.ATTN_LR_MULT}
-        sgd_polices.append(attn_group)
-
-    # if cfg.TRAINER.FINETUNE_TEXT:
-    #     try:
-    #         text_params = model.text_params()
-    #     except:
-    #         text_params = model.module.text_params()
-    #     print('num of params in text layer: ', len(text_params))
-    #     text_group = {'params': text_params, 'lr': cfg.OPTIM.LR * cfg.OPTIM.TEXT_LR_MULT}
-    #     sgd_polices.append(text_group)
-
-    optim = torch.optim.SGD(sgd_polices, lr=cfg.OPTIM.LR,
-                                momentum=cfg.OPTIM.MOMENTUM,
-                                weight_decay=cfg.OPTIM.WEIGHT_DECAY,
-                                dampening=cfg.OPTIM.SGD_DAMPNING,
-                                nesterov=cfg.OPTIM.SGD_NESTEROV)
-
-    sched = build_lr_scheduler(optim, cfg.OPTIM)
-    log_folder = os.path.join(cfg.OUTPUT_DIR, arch_name)
-    if not os.path.exists(log_folder):
-        os.makedirs(log_folder)
-
-    logfile_path = os.path.join(log_folder, 'log.log')
-    if os.path.exists(logfile_path):
-        logfile = open(logfile_path, 'a')
-    else:
-        logfile = open(logfile_path, 'w')
-
-    # logging out some useful information on screen and into log file
-    command = " ".join(sys.argv)
-    print(command, flush=True)
-    print(args, flush=True)
-    print(model, flush=True)
-    print(cfg, flush=True)
-    print(command, file=logfile, flush=True)
-    print(args, file=logfile, flush=True)
-    print(cfg, file=logfile, flush=True)
-
-
-    if not args.auto_resume:
-        print(model, file=logfile, flush=True)
-
-    if args.auto_resume:
-        # checkpoint_path = os.path.join(log_folder, 'checkpoint.pth.tar')
-        # if os.path.exists(checkpoint_path):
-        args.resume = os.path.join(log_folder, 'checkpoint.pth.tar')
-
-    best_unseen_F1 = 0
-    best_gzsl_F1 = 0
-    args.start_epoch = 0
-    if args.resume is not None:
-        if os.path.exists(args.resume):
-            print('... loading pretrained weights from %s' % args.resume)
-            print('... loading pretrained weights from %s' % args.resume, file=logfile, flush=True)
-            checkpoint = torch.load(args.resume, map_location='cpu')
-            args.start_epoch = checkpoint['epoch']
-            # TODO: handle distributed version
-            best_unseen_F1 = checkpoint['best_unseen_F1']
-            best_gzsl_F1 = checkpoint['best_gzsl_F1']
-            model.load_state_dict(checkpoint['state_dict'])
-            optim.load_state_dict(checkpoint['optimizer'])
-            sched.load_state_dict(checkpoint['scheduler'])
-
-    for epoch in range(args.start_epoch, cfg.OPTIM.MAX_EPOCH):
-        batch_time, losses, mAP_batches = train_coop(train_loader, [val_unseen_loader, val_gzsi_loader], model, optim, sched, args, cfg, epoch,  cls_id)
-        print('Train: [{0}/{1}]\t'
-              'Time {batch_time.avg:.3f}\t'
-              'Loss {losses.avg:.2f} \t'
-              'mAP {mAP_batches.avg:.2f}'.format(
-            epoch + 1, cfg.OPTIM.MAX_EPOCH, batch_time=batch_time,
-            losses=losses, mAP_batches=mAP_batches), flush=True)
-
-        print('Train: [{0}/{1}]\t'
-              'Time {batch_time.avg:.3f}\t'
-              'Loss {losses.avg:.2f} \t'
-              'mAP {mAP_batches.avg:.2f}'.format(
-            epoch + 1, cfg.OPTIM.MAX_EPOCH, batch_time=batch_time,
-            losses=losses, mAP_batches=mAP_batches), file=logfile, flush=True)
-
-        if (epoch + 1) % args.val_every_n_epochs == 0 or epoch == args.stop_epochs - 1:
-            p_unseen, r_unseen, f1_unseen, mAP_unseen = validate_zsl(val_unseen_loader, model, args, val_unseen_cls_id)
-            p_gzsl, r_gzsl, f1_gzsl, mAP_gzsl = validate_zsl(val_gzsi_loader, model, args, val_gzsi_cls_id)
-            print('Test: [{}/{}]\t '
-                  ' P_unseen {:.2f} \t R_unseen {:.2f} \t F1_unseen {:.2f} \t mAP_unseen {:.2f}\t'
-                  ' P_gzsl {:.2f} \t R_gzsl {:.2f} \t F1_gzsl {:.2f} \t mAP_gzsl {:.2f}\t'
-                  .format(epoch + 1, cfg.OPTIM.MAX_EPOCH,   p_unseen, r_unseen, f1_unseen, mAP_unseen,  p_gzsl, r_gzsl, f1_gzsl, mAP_gzsl), flush=True)
-            print('Test: [{}/{}]\t '
-                  ' P_unseen {:.2f} \t R_unseen {:.2f} \t F1_unseen {:.2f} \t mAP_unseen {:.2f}\t'
-                  ' P_gzsl {:.2f} \t R_gzsl {:.2f} \t F1_gzsl {:.2f} \t mAP_gzsl {:.2f}\t'
-                  .format(epoch + 1, cfg.OPTIM.MAX_EPOCH, p_unseen, r_unseen, f1_unseen, mAP_unseen, p_gzsl, r_gzsl,
-                          f1_gzsl, mAP_gzsl), file=logfile, flush=True)
-
-            is_unseen_best = f1_unseen > best_unseen_F1
-            if is_unseen_best:
-                best_unseen_F1 = f1_unseen
-
-            is_gzsl_best = f1_gzsl > best_gzsl_F1
-            if is_gzsl_best:
-                best_gzsl_F1 = f1_gzsl
-
-            save_dict = {'epoch': epoch + 1,
-                         'arch': arch_name,
-                         'state_dict': model.state_dict(),
-                         'best_unseen_F1': best_unseen_F1,
-                         'best_gzsl_F1': best_unseen_F1,
-                         'optimizer': optim.state_dict(),
-                         'scheduler': sched.state_dict()
-                         }
-            save_checkpoint(save_dict, is_unseen_best, log_folder, prefix='unseen')
-            save_checkpoint(save_dict, is_gzsl_best, log_folder, prefix='gzsl')
-
-    print('Evaluating the best model', flush=True)
-    print('Evaluating the best model', file=logfile, flush=True)
-
-    best_checkpoints = os.path.join(log_folder, 'unseen_model_best.pth.tar')
-    print('... loading pretrained weights from %s for the best unseen zsl' % best_checkpoints, flush=True)
-    print('... loading pretrained weights from %s for the best unseen zsl' % best_checkpoints, file=logfile, flush=True)
-    checkpoint = torch.load(best_checkpoints, map_location='cpu')
-    model.load_state_dict(checkpoint['state_dict'])
-    best_epoch = checkpoint['epoch']
-    p_unseen, r_unseen, f1_unseen, mAP_unseen = validate_zsl(test_unseen_loader, model, args, test_unseen_cls_id)
-    print('Test: [{}/{}]\t '
-          ' p_unseen {:.2f} \t r_unseen {:.2f} \t f_unseen {:.2f} \t  mAP_unseen {:.2f}'
-          .format(best_epoch, cfg.OPTIM.MAX_EPOCH, p_unseen, r_unseen, f1_unseen, mAP_unseen),  flush=True)
-    print('Test: [{}/{}]\t '
-          ' p_unseen {:.2f} \t r_unseen {:.2f} \t f_unseen {:.2f} \t  mAP_unseen {:.2f}'
-          .format(best_epoch, cfg.OPTIM.MAX_EPOCH, p_unseen, r_unseen, f1_unseen, mAP_unseen),
-          file=logfile, flush=True)
-
-    best_checkpoints = os.path.join(log_folder, 'gzsl_model_best.pth.tar')
-    print('... loading pretrained weights from %s for the best gzsl' % best_checkpoints, flush=True)
-    print('... loading pretrained weights from %s for the best gzsl' % best_checkpoints, file=logfile, flush=True)
-    checkpoint = torch.load(best_checkpoints, map_location='cpu')
-    model.load_state_dict(checkpoint['state_dict'])
-    best_epoch = checkpoint['epoch']
-    p_gzsl, r_gzsl, f1_gzsk, mAP_gzsl = validate_zsl(test_gzsi_loader, model, args, test_gzsi_cls_id)
-    print('Test: [{}/{}]\t '
-          ' p_gzsl {:.2f} \t r_gszl {:.2f} \t f_gzsl {:.2f} \t  mAP_gzsl {:.2f}'
-          .format(best_epoch, cfg.OPTIM.MAX_EPOCH, p_gzsl, r_gzsl, f1_gzsk, mAP_gzsl), flush=True)
-    print('Test: [{}/{}]\t '
-          ' p_gzsl {:.2f} \t r_gszl {:.2f} \t f_gzsl {:.2f} \t  mAP_gzsl {:.2f}'
-          .format(best_epoch, cfg.OPTIM.MAX_EPOCH, p_gzsl, r_gzsl, f1_gzsk, mAP_gzsl),
-          file=logfile, flush=True)
+    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=20)
 
 
 if __name__ == '__main__':
-    main()
+
+    parser = argparse.ArgumentParser(prog='Train EvalCoop', description='Script to train EvalCoop')
+
+    parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
+    parser.add_argument('--dataset_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA')
+    parser.add_argument('--n_attr', type=int, default=3, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
+
+    args = parser.parse_args()
+    main(args)

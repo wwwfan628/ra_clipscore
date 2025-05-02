@@ -8,7 +8,7 @@ import torch.nn.functional as F
 
 _tokenizer = _Tokenizer()
 
-__all__ = ['eval_coop', 'EvalCoop']
+__all__ = ['evalcoop', 'EvalCoop']
 
 ASC = True  # atrributes specific context
 
@@ -197,8 +197,10 @@ class EvalCoop(nn.Module):
 
         # convert the shape of logits to [b, 2, num_attrs]
         logits = output.resize(b, 2, c//2)  # [100, 2, 17]
+        Softmax = torch.nn.Softmax(dim=1)
+        prob = Softmax(logits).cpu()[:, 1]
 
-        return logits
+        return prob
 
     def backbone_params(self):
         params = []
@@ -226,7 +228,7 @@ class EvalCoop(nn.Module):
 def evalcoop(attributes, **kwargs):
     print(f"Loading CLIP")
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    clip_model = eval_clip.load("RN101", device=device)
+    clip_model, _ = eval_clip.load("RN101", device=device)
 
     clip_model.float()
 
