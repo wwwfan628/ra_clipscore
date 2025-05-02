@@ -23,7 +23,7 @@ import numpy as np
 
 
 class CelebADataset(Dataset):
-    def __init__(self, root_dir, attr_file='Anno/list_attr_celeba.txt', img_dir='Img', transform=None, selected_attrs=None):
+    def __init__(self, root_dir, attr_file='list_attr_celeba.txt', img_dir='Img', transform=None, selected_attrs=None):
         """
         root_dir: path to CelebA root directory
         attr_file: file with attributes
@@ -66,9 +66,10 @@ class CelebADataset(Dataset):
         return image, label
 
 
-def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=10):
+def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, save_path='checkpoint.pth',num_epochs=10):
     model.to(device)
 
+    best_acc = 0.0
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
@@ -89,6 +90,10 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num
         avg_train_loss = running_loss / len(train_loader.dataset)
 
         val_loss, metrics = validate_model(model, val_loader, loss_fn, device)
+
+        if metrics['accuracy'] > best_acc:
+            best_acc = metrics['accuracy']
+            torch.save(model.state_dict(), save_path)
 
         print(f"Epoch {epoch+1}/{num_epochs}")
         print(f"Train Loss: {avg_train_loss:.4f} | Val Loss: {val_loss:.4f}")
@@ -181,17 +186,17 @@ def main(args):
     )
 
     # Define split sizes (e.g., 80% train, 20% val)
-    val_ratio = 0.2
+    val_ratio = 0.1
     val_size = int(len(dataset) * val_ratio)
     train_size = len(dataset) - val_size
 
     # Random split
-    generator = torch.Generator().manual_seed(42)  # fix seed
+    generator = torch.Generator().manual_seed(32)  # fix seed
     train_dataset, val_dataset = random_split(dataset, [train_size, val_size], generator=generator)
 
     # Create data loaders
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True, num_workers=4)
-    val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False, num_workers=4)
+    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=4)
+    val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=4)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loss_fn = nn.BCELoss()
@@ -208,7 +213,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='Train EvalCoop', description='Script to train EvalCoop')
 
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
-    parser.add_argument('--dataset_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA')
+    parser.add_argument('--dataset_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/face1k_furniture1k')
     parser.add_argument('--n_attr', type=int, default=3, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
 
