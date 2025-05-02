@@ -2,6 +2,8 @@ import torch
 from torch import nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, average_precision_score
 import os
+import re
+import natsort
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
@@ -17,6 +19,7 @@ from torch.utils.data import random_split, DataLoader
 import argparse
 from eval_clip import evalcoop
 from utils.attribute_list import *
+import numpy as np
 
 
 class CelebADataset(Dataset):
@@ -33,19 +36,21 @@ class CelebADataset(Dataset):
         self.img_dir = os.path.join(root_dir, img_dir)
         self.transform = transform
 
+        r = re.compile('[0-9]{6}.jpg')
+
         # Load attributes
         df = pd.read_csv(self.attr_path, header=[0], delimiter=r"\s+")
         df = df.replace(-1, 0)  # Convert -1 to 0 for binary classification
 
-        # Filter attributes
+        all_imgs = os.listdir(self.img_dir)
+        self.filenames = natsort.natsorted(all_imgs)
         if selected_attrs is not None:
             self.attr_names = selected_attrs
-            self.attrs = df[selected_attrs].values.astype('float32')
         else:
             self.attr_names = df.columns.tolist()
-            self.attrs = df.values.astype('float32')
-
-        self.filenames = df.index.tolist()
+        self.labels = [df[self.attr_names].loc[f].values.astype('float32') if r.match(f) else
+                       np.zeros(len(self.attr_names)).astype('float32')
+                       for f in self.filenames]
 
     def __len__(self):
         return len(self.filenames)
@@ -57,7 +62,7 @@ class CelebADataset(Dataset):
         if self.transform:
             image = self.transform(image)
 
-        label = torch.tensor(self.attrs[idx], dtype=torch.float32)
+        label = torch.tensor(self.labels[idx], dtype=torch.float32)
         return image, label
 
 
