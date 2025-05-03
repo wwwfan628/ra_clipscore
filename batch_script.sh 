@@ -1,0 +1,13 @@
+#!/bin/bash
+# SLURM batch job script for Berzelius
+
+#SBATCH -A x_yiflu     # Replace with your project account name
+#SBATCH --gpus=1                      # Request 4 GPUs
+#SBATCH -t 1-00:00:00                 # Wall time: 1 day (24h)
+
+# Load your environment
+module load Miniforge3/24.7.1-2-hpc1-bdist
+conda activate py310
+
+# Execute your code
+python train_eval_coop.py
