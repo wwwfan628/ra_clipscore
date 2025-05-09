@@ -201,11 +201,11 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loss_fn = nn.BCELoss()
     try:
-        optimizer = torch.optim.Adam(model.prompt_params(), lr=1e-3)
+        optimizer = torch.optim.Adam(model.prompt_params(), lr=1e-2)
     except:
-        optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-3)
+        optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-2)
 
-    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=20)
+    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=50)
 
 
 if __name__ == '__main__':
