@@ -208,7 +208,7 @@ def main(args):
     except:
         optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-2)
 
-    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=50)
+    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=args.num_epochs)
 
 
 if __name__ == '__main__':
@@ -217,7 +217,8 @@ if __name__ == '__main__':
 
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
     parser.add_argument('--dataset_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/face1k_furniture1k')
-    parser.add_argument('--n_attr', type=int, default=3, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--n_attr', type=int, default=3, help='number of attributes')
+    parser.add_argument('--num_epochs', type=int, default=200, help='number of training epochs')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
 
     args = parser.parse_args()
