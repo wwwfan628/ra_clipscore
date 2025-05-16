@@ -90,7 +90,7 @@ class MLCPromptLearner(nn.Module):
         print(f"Number of positive context words (tokens): {n_ctx_pos}")
         print(f"Number of negative context words (tokens): {n_ctx_neg}")
 
-        self.ctx_pos = nn.Parameter(ctx_vectors_pos)  # to be optimized    [16, 512] or [n_attrs, 16, 512]
+        self.ctx_pos = nn.Parameter(ctx_vectors_pos)  # to be optimized [16, 512] or [n_attrs, 16, 512]
         self.ctx_neg = nn.Parameter(ctx_vectors_neg)  # to be optimized
 
         attributes = [attribute.replace("_", " ") for attribute in attributes]
@@ -167,7 +167,8 @@ class MLCPromptLearner(nn.Module):
 class EvalCoop(nn.Module):
     def __init__(self, attributes, clip_model):
         super().__init__()
-        self.prompt_learner = MLCPromptLearner(attributes, clip_model)
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.prompt_learner = MLCPromptLearner(attributes, clip_model).to(device)
 
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
@@ -233,7 +234,7 @@ def evalcoop(attributes, **kwargs):
     clip_model.float()
 
     print("Building evalcoop")
-    model = EvalCoop(attributes, clip_model)
+    model = EvalCoop(attributes, clip_model).to(device)
 
     print('Freeze the backbone weights')
     backbone_params = model.backbone_params()
