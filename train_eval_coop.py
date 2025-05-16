@@ -79,9 +79,9 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, sav
             labels = labels.to(device).float()  # Multi-label requires float targets
 
             outputs = model(inputs)
-            print(outputs.device)
-            print(labels.device)
-            print(inputs.device)
+            # print(outputs.device)
+            # print(labels.device)
+            # print(inputs.device)
             loss = loss_fn(outputs, labels)
 
             optimizer.zero_grad()
@@ -132,9 +132,9 @@ def validate_model(model, val_loader, loss_fn, device):
             all_probs.append(probs)
             all_targets.append(targets)
 
-    all_preds = torch.cat(all_preds).numpy()
-    all_probs = torch.cat(all_probs).numpy()
-    all_targets = torch.cat(all_targets).numpy()
+    all_preds = torch.cat(all_preds)
+    all_probs = torch.cat(all_probs)
+    all_targets = torch.cat(all_targets)
 
     # Metrics
     accuracy = accuracy_score(all_targets, all_preds)
