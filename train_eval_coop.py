@@ -79,6 +79,8 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, sav
             labels = labels.to(device).float()  # Multi-label requires float targets
 
             outputs = model(inputs)
+            print(outputs.device)
+            print(labels.device)
             loss = loss_fn(outputs, labels)
 
             optimizer.zero_grad()
