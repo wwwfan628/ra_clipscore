@@ -198,7 +198,7 @@ class EvalCoop(nn.Module):
         # convert the shape of logits to [b, 2, num_attrs]
         logits = output.resize(b, 2, c//2)  # [100, 2, 17]
         Softmax = torch.nn.Softmax(dim=1)
-        prob = Softmax(logits).cpu()[:, 1]
+        prob = Softmax(logits)[:, 1]
 
         return prob
 

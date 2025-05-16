@@ -81,7 +81,6 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, sav
             outputs = model(inputs)
             print(outputs.device)
             print(labels.device)
-            print(next(model.parameters()).device)  # should be cuda
             print(inputs.device)
             loss = loss_fn(outputs, labels)
 
