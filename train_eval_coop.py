@@ -81,6 +81,8 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, sav
             outputs = model(inputs)
             print(outputs.device)
             print(labels.device)
+            for name, param in model.state_dict().items():
+                print(name, param.device)
             loss = loss_fn(outputs, labels)
 
             optimizer.zero_grad()
