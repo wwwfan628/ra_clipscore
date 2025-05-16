@@ -167,8 +167,7 @@ class MLCPromptLearner(nn.Module):
 class EvalCoop(nn.Module):
     def __init__(self, attributes, clip_model):
         super().__init__()
-        device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.prompt_learner = MLCPromptLearner(attributes, clip_model).to(device)
+        self.prompt_learner = MLCPromptLearner(attributes, clip_model)
 
         self.tokenized_prompts = self.prompt_learner.tokenized_prompts
         self.image_encoder = clip_model.visual
@@ -228,13 +227,12 @@ class EvalCoop(nn.Module):
 
 def evalcoop(attributes, **kwargs):
     print(f"Loading CLIP")
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    clip_model, _ = eval_clip.load("RN101", device=device)
+    clip_model, _ = eval_clip.load("RN101", device='cpu')
 
     clip_model.float()
 
     print("Building evalcoop")
-    model = EvalCoop(attributes, clip_model).to(device)
+    model = EvalCoop(attributes, clip_model)
 
     print('Freeze the backbone weights')
     backbone_params = model.backbone_params()
