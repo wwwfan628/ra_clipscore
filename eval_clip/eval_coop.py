@@ -10,7 +10,7 @@ _tokenizer = _Tokenizer()
 
 __all__ = ['evalcoop', 'EvalCoop']
 
-ASC = True  # atrributes specific context
+ASC = False  # atrributes specific context
 
 class TextEncoder(nn.Module):
     def __init__(self, clip_model):
