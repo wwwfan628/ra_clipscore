@@ -1,11 +1,11 @@
 #!/bin/bash
-#SBATCH -J train_coop
+#SBATCH -J eval
 #SBATCH --gpus 1
 #SBATCH -t 0-12:00:00
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=yifanlu@kth.se
-#SBATCH --output /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_train_coop.out
-#SBATCH --error  /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_train_coop.err
+#SBATCH --output /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_eval.out
+#SBATCH --error  /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_eval.err
 
 cd /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics
 
