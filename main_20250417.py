@@ -79,7 +79,7 @@ def main(args):
 
     # calculate different distribution distances
     single_attribute_results = core.compute_single(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
-    pair_attributes_results = core.compute_pair(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
+    # pair_attributes_results = core.compute_pair(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
     all_attributes_results = core.compute_all(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
 
     results_dict = {'attr_list': text_list,
@@ -90,9 +90,9 @@ def main(args):
                     'mean_difference_single': single_attribute_results[2],
                     'f_distance_single': single_attribute_results[3],
                     'kernel_distance_single': single_attribute_results[4],
-                    'forward_KL_pair': pair_attributes_results[0], 'reverse_KL_pair': pair_attributes_results[1],
-                    'mean_difference_pair': pair_attributes_results[2], 'f_distance_pair': pair_attributes_results[3],
-                    'kernel_distance_pair': pair_attributes_results[4],
+                    #'forward_KL_pair': pair_attributes_results[0], 'reverse_KL_pair': pair_attributes_results[1],
+                    #'mean_difference_pair': pair_attributes_results[2], 'f_distance_pair': pair_attributes_results[3],
+                    #'kernel_distance_pair': pair_attributes_results[4],
                     'forward_KL_all': all_attributes_results[0], 'reverse_KL_all': all_attributes_results[1],
                     'mean_difference_all': all_attributes_results[2], 'f_distance_all': all_attributes_results[3],
                     'kernel_distance_all': all_attributes_results[4]}
@@ -102,7 +102,7 @@ def main(args):
 
     # plot bar diagram and save figures
     core.plot_single(single_attribute_results, text_list, save_dir)
-    core.plot_pair(pair_attributes_results, text_list, save_dir)
+    #core.plot_pair(pair_attributes_results, text_list, save_dir)
 
     # print out all attributes results
     print('##### Printing results of all attributes #####')
