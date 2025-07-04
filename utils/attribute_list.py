@@ -2,6 +2,51 @@ attr_dict = {}
 
 attr_dict['celebA_3_USER'] = ['male', 'smile', 'eyeglasses']
 
+attr_dict['celebA_2_USER'] = ['male', 'sir']
+
+attr_dict['celebA_40_USER'] = [
+    "5 o'clock shadow",
+    'arched eyebrows',
+    'attractive',
+    'bags under eyes',
+    'bald',
+    'bangs',
+    'big lips',
+    'big nose',
+    'black hair',
+    'blond hair',
+    'blurry',
+    'brown hair',
+    'bushy eyebrows',
+    'chubby',
+    'double chin',
+    'eyeglasses',
+    'goatee',
+    'gray hair',
+    'heavy makeup',
+    'high cheekbones',
+    'male',
+    'mouth slightly open',
+    'mustache',
+    'narrow eyes',
+    'no beard',
+    'oval face',
+    'pale skin',
+    'pointy nose',
+    'receding hairline',
+    'rosy cheeks',
+    'sideburns',
+    'smiling',
+    'straight hair',
+    'wavy hair',
+    'wearing earrings',
+    'wearing hat',
+    'wearing lipstick',
+    'wearing necklace',
+    'wearing necktie',
+    'young'
+]
+
 attr_dict['celebA_50_USER'] = ['male', 'heavy makeup', 'wearing earrings', 'black hair', 'blond hair',
                              'wearing eyeglasses', 'wearing hat', 'young', 'with beard', 'smiling',
                              'dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
@@ -37,11 +82,11 @@ attr_dict['ffhq_20_GPT'] = ['clean-shaven', 'beard', 'mustache', 'Wide-eyed', 't
 attr_dict['celebA_20_USER'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                              "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", "wearing earlings","beard","double chin", "young"]
 
-attr_dict['celebA_40_USER'] = ["man", "not man", "woman", "not woman", "child", "not child", "arched eyebrows", "not arched eyebrows", "smiling", "not smiling", "wearing hat",
-                               "not wearing hat", "wearing eyeglasses", "not wearing eyeglasses", "wearing necklace", "not wearing necklace", "blonde hair", "not blonde hair",
-                               "black hair", "not black hair", "bangs", "no bangs", "gray hair", "not gray hair", "wavy hair", "not wavy hair", "bald head", "not bald head",
-                               "red lip", "not red lip", "makeup", "no makeup", "wearing earlings", "not wearing earlings", "beard", "no beard", "double chin", "not double chin",
-                               "young", "not young"]
+# attr_dict['celebA_40_USER'] = ["man", "not man", "woman", "not woman", "child", "not child", "arched eyebrows", "not arched eyebrows", "smiling", "not smiling", "wearing hat",
+#                                "not wearing hat", "wearing eyeglasses", "not wearing eyeglasses", "wearing necklace", "not wearing necklace", "blonde hair", "not blonde hair",
+#                                "black hair", "not black hair", "bangs", "no bangs", "gray hair", "not gray hair", "wavy hair", "not wavy hair", "bald head", "not bald head",
+#                                "red lip", "not red lip", "makeup", "no makeup", "wearing earlings", "not wearing earlings", "beard", "no beard", "double chin", "not double chin",
+#                                "young", "not young"]
 
 attr_dict['lsuncat_20_USER'] = ['green eyes', 'blue eyes', 'pink nose', 'black fur', 'white fur', 'yellow eyes', 'fluffy fur', 'solid color', 'black nose',  'tabby pattern',
                                 'white paws', 'gray fur', 'brown fur',   'round eyes', 'calico pattern', 'orange fur', 'pointed ears', 'tufted ears', 'slanted eyes', 'long tail']

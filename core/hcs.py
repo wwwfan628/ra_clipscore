@@ -223,3 +223,22 @@ def get_hcs_without_minus_mean_text_features(img_features_real, img_features_gen
 
 #########################################********************************************************
 
+def get_hcs_try(img_features_real, img_features_gen, text_features):
+    print(f"calculating HCS")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    img_mean = torch.mean(img_features_real, axis=0)
+    img_mean = img_mean.unsqueeze(0).to(device)
+    text_mean = torch.mean(text_features, axis=0)
+
+    img_features = img_features_gen - img_mean
+    text_features = text_features - text_mean
+    img_features /= img_features.norm(dim=-1, keepdim=True)
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+
+    # lambda_reg = 1e-3
+    XXT = text_features @ text_features.mT  # (22, 22)
+    # inv_XXT = torch.inverse(XXT + lambda_reg * torch.eye(XXT.shape[0]))
+    inv_XXT = torch.inverse(XXT)
+    weights = 100 * img_features @ text_features.T @ inv_XXT  # (1000, 22)
+    return weights
+
