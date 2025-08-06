@@ -30,6 +30,17 @@ def get_text_features_eval_clip(text_list):
     return text_features
 
 
+def get_text_features_eval_clip_local_vit(text_list):
+    print("calculating text features")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = eval_clip.load("ViT-B/16", device=device)
+    model.eval()
+    with torch.no_grad():
+        text = eval_clip.tokenize(text_list).to(device) # [44, 77]
+        text_features = model.encode_text(text) # [44, 512]
+    return text_features
+
+
 def get_img_features_eval_clip(img_dir, batch_size=1000):
     # calculate image features
     print("calculating image features")
@@ -53,12 +64,37 @@ def get_img_features_eval_clip(img_dir, batch_size=1000):
     return img_features
 
 
+def get_img_features_eval_clip_local_vit(img_dir, batch_size=1000):
+    # calculate image features
+    print("calculating image features")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = eval_clip.load("ViT-B/16", device=device)
+    model.eval()
+    dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
+
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False,
+                                             num_workers=2)
+
+    img_features_list = []
+
+    with torch.no_grad():
+        for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):   # [1000, 3, 224, 224]
+            h, w = model.visual.input_resolution, model.visual.input_resolution
+            image_features, attn_weight_list = model.encode_image(datas.to(device), h, w, attn_mask=1)   # datas [1000, 3, 224, 224]  image features [1000, 512, 50]
+            # image_features = model.encode_image(datas.to(device))
+            img_features_list.append(image_features)
+
+    img_features = torch.cat(img_features_list) # [5000, 512, 50]
+    return img_features
+
+
 def get_evalcs(img_features, text_features):
     assert text_features.shape[0] % 2 == 0
     print(f"calculating EvalCS")
 
     # normalize features
     text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
+    img_features = img_features.transpose(1,2)
     image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [5000, 512, 50]
 
     # Class-Specific Region Feature Aggregation
@@ -78,7 +114,7 @@ def get_evalcs(img_features, text_features):
 
     # # Class-Specific Region Feature Aggregation
     # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
-    # b, a, p = output.shape  # b 5000 c 44 p 50
+    # b, a, p = output.shape  # b 5000 a 44 p 50
     # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
     # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
     # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]

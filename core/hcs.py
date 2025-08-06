@@ -6,7 +6,7 @@ import os
 import torchvision
 from utils import *
 
-CLIP_BACKBONE = "ViT-B/32"   # "RN101"    # "ViT-B/32"
+CLIP_BACKBONE = "ViT-B/16"   # "RN101"    # "ViT-B/32"
 
 def get_text_mean(text_list, clip_backbone=CLIP_BACKBONE):
     print("calculating text mean")

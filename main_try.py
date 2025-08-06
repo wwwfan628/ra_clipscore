@@ -36,20 +36,20 @@ def main(args):
         with open(f'text_features_{experiment_name}.pkl', 'wb') as f:
             pickle.dump(text_features, f)
 
-    if os.path.exists(f'img_features_{dataset_real}.pkl'):
-        with open(f'img_features_{dataset_real}.pkl', 'rb') as f:
+    if os.path.exists(f'img_features_{dataset_real}_{args.score_type}.pkl'):
+        with open(f'img_features_{dataset_real}_{args.score_type}.pkl', 'rb') as f:
             img_features_real = pickle.load(f)
     else:
         img_features_real = core.get_img_features_eval_clip(img_dir=args.real_dir, batch_size=1000)
-        with open(f'img_features_{dataset_real}.pkl', 'wb') as f:
+        with open(f'img_features_{dataset_real}_{args.score_type}.pkl', 'wb') as f:
             pickle.dump(img_features_real, f)
 
-    if os.path.exists(f'img_features_{dataset_gen}.pkl'):
-        with open(f'img_features_{dataset_gen}.pkl', 'rb') as f:
+    if os.path.exists(f'img_features_{dataset_gen}_{args.score_type}.pkl'):
+        with open(f'img_features_{dataset_gen}_{args.score_type}.pkl', 'rb') as f:
             img_features_gen = pickle.load(f)
     else:
         img_features_gen = core.get_img_features_eval_clip(img_dir=args.gen_dir, batch_size=1000)   # [5782, 512, 50]
-        with open(f'img_features_{dataset_gen}.pkl', 'wb') as f:
+        with open(f'img_features_{dataset_gen}_{args.score_type}.pkl', 'wb') as f:
             pickle.dump(img_features_gen, f)
 
     # calculate scores
@@ -63,8 +63,8 @@ def main(args):
     scores_cov_gen = np.cov(scores_gen.T)
 
     # calculate different distribution distances
-    single_attribute_results = core.compute_single_reduced(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
-    pair_attributes_results = core.compute_pair_reduced(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
+    single_attribute_results = core.compute_single(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
+    pair_attributes_results = core.compute_pair(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
     all_attributes_results = core.compute_all(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
 
     results_dict = {'attr_list': text_list,
@@ -86,8 +86,8 @@ def main(args):
         pickle.dump(results_dict, f)
 
     # plot bar diagram and save figures
-    core.plot_single_reduced(single_attribute_results, text_list, save_dir)
-    core.plot_pair_reduced(pair_attributes_results, text_list, save_dir)
+    core.plot_single(single_attribute_results, text_list, save_dir)
+    core.plot_pair(pair_attributes_results, text_list, save_dir)
 
     # print out all attributes results
     print('##### Printing results of all attributes #####')
@@ -106,7 +106,6 @@ if __name__ == '__main__':
     parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5K')
     parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA_process/CelebA_5k_Eyeglasses_Injection_800')
     parser.add_argument('--n_attr', type=int, default=22, help='number of attributes to calculate SaD and PaD')
-    parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
     parser.add_argument('--score_type', type=str, default='EvalCS', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
 
