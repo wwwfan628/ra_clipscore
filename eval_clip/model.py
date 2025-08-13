@@ -155,7 +155,7 @@ class AttentionConv(nn.Module):
         #######################################################################
         x3 = torch.cat([x1[0,:,:].unsqueeze(0), x2[1:]], dim=0)
         x3 = x3.permute(1, 2, 0)
-        return x3, attn_weights[:, :1]
+        return x3, attn_weights
         #######################################################################
         # x2 = x2.permute(1, 2, 0)    # x2.size [1000, 512, 50]
         # return x2, attn_weights[:, :1]  # [1000, 512, 50] [1000, 1, 50]
@@ -281,7 +281,7 @@ class ModifiedResNet_conv_proj(nn.Module):
         x = self.layer3(x)
         x = self.layer4(x)
         x, attn_weights = self.attnpool(x)
-        return x, attn_weights  # [1000, 512, 50], [1000, 1, 50]
+        return x, attn_weights  # [1000, 512, 50], [1000, 50, 50]
 
 
 

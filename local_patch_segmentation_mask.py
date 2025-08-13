@@ -200,7 +200,7 @@ def main(args):
 
     # load model
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, preprocess = eval_clip.load("ViT-B/16", device=device)
+    model, preprocess = eval_clip.load(args.backbone, device=device)
     model.eval()
 
     # get image from path
@@ -217,12 +217,16 @@ def main(args):
 
     model.eval()
     with torch.no_grad():
-        text = eval_clip.tokenize(text_list_prompt).to(device)  # single prompt [22, 77] dual prompts [44, 77]
-        text_features = model.encode_text(text)  # [44, 512]
+        text = eval_clip.tokenize(text_list_prompt).to(device)  # single prompt [80, 77] dual prompts [160, 77]
+        text_features = model.encode_text(text)  # [80, 512/1024]
 
     with torch.no_grad():
         h, w = model.visual.input_resolution, model.visual.input_resolution
-        image_features, attn_weight_list = model.encode_image(image, h, w, attn_mask=1)   # image [1, 3, 224, 224] image features [1, 197, 512], attn_weight [1, 197, 197]
+        if args.backbone == 'ViT-B/16':
+            image_features, attn_weight_list = model.encode_image(image, h, w, attn_mask=1)   # image [1, 3, 224, 224] image features [1, 197, 512], attn_weight [1, 197, 197]
+        elif 'RN' in args.backbone:
+            image_features, attn_weight_list = model.encode_image(image)    # image [1, 3, 224, 224] image features [1, 1024, 50], attn_weight [1, 50, 50]
+            image_features = image_features.transpose(1, 2)
 
     # No fusion: directly using local patch features to obtain class of local patch
     # normalized features
@@ -234,8 +238,12 @@ def main(args):
     logits_per_patch = logit_scale * image_features @ text_features.t()
     # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
     # instead of using class label per patch, resize the logits to original image size and polt per pixel mask
+    if args.backbone == 'ViT-B/16':
+        grid = (14, 14)
+    elif 'RN' in args.backbone:
+        grid = (7, 7)
     mask, kept_ids, _ = logits_to_mask_keep_topk(
-        logits_per_patch.squeeze()[1:], h, w, grid=(14,14),
+        logits_per_patch.squeeze()[1:], h, w, grid=grid,
         keep_k=5, background_id=0,
         select_mode="sum", small_obj_tau=0.7,
         reassign_to_kept=False  # set True to fallback to kept classes
@@ -252,6 +260,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_attr', type=int, default=80, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
     parser.add_argument('--score_type', type=str, default='EvalCS', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
+    parser.add_argument('--backbone', type=str, default='ViT-B/16', help='backbone for CLIP, e.g. ViT-B/16 or RN50, RN101')
 
     args = parser.parse_args()
     main(args)
