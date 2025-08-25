@@ -1,5 +1,14 @@
 attr_dict = {}
 
+attr_dict['coco_1_USER'] = [
+    'airplane'
+]
+
+attr_dict['coco_2_USER'] = [
+    'background',
+    'zebra',
+]
+
 attr_dict['coco_80_USER'] = [
     'background',
     'person',

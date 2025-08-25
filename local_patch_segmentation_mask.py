@@ -16,6 +16,8 @@ import eval_clip
 import os
 from PIL import Image
 from torchvision.transforms import Compose, Resize, CenterCrop, ToTensor, Normalize
+import cv2
+_CONTOUR_INDEX = 1 if cv2.__version__.split('.')[0] == '3' else 0
 
 try:
     from torchvision.transforms import InterpolationMode
@@ -41,6 +43,66 @@ def _transform_without_normalize(n_px):
         _convert_image_to_rgb,
         ToTensor()
     ])
+
+
+def mask_attn(logits_coarse, logits, h, w, attn_weight):  # P_coarse, P^(hat)_refined, M_attn*A_l
+    patch_size = 16
+    candidate_cls_list = []
+    logits_refined = logits.clone()  # [1200, 103]
+
+    logits_max = torch.max(logits, dim=0)[0]  # [103]
+
+    for tempid, tempv in enumerate(logits_max):
+        if tempv > 0:
+            candidate_cls_list.append(tempid)  # P_local
+    for ccls in candidate_cls_list:
+        temp_logits = logits[:, ccls]  # [1200]
+        temp_logits = temp_logits - temp_logits.min()
+        temp_logits = temp_logits / temp_logits.max()
+        mask = temp_logits
+        mask = mask.reshape(h // patch_size, w // patch_size)  # [30, 40]
+
+        box, cnt = scoremap2bbox(mask.detach().cpu().numpy(), threshold=0.5, multi_contour_eval=True)
+        aff_mask = torch.zeros((mask.shape[0], mask.shape[1])).to(logits_coarse.device)  # [30, 40]
+        for i_ in range(cnt):
+            x0_, y0_, x1_, y1_ = box[i_]
+            aff_mask[y0_:y1_, x0_:x1_] = 1
+
+        aff_mask = aff_mask.view(1, mask.shape[0] * mask.shape[1])  # [1, 1200]
+        trans_mat = attn_weight * aff_mask  # [1, 1200] * [1200, 1200] = [1200, 1200]    M_attn*A_l*M_cls
+        logits_refined_ccls = torch.matmul(trans_mat, logits_coarse[:, ccls:ccls + 1])  # [1200, 1200] * [1200, 1]
+        logits_refined[:, ccls] = logits_refined_ccls.squeeze()
+    return logits_refined  # M_attn*A_l*M_cls*P_coarse
+
+
+def scoremap2bbox(scoremap, threshold, multi_contour_eval=False):
+    height, width = scoremap.shape
+    scoremap_image = np.expand_dims((scoremap * 255).astype(np.uint8), 2)   # (30, 40, 1)
+    _, thr_gray_heatmap = cv2.threshold(    # (30, 40)
+        src=scoremap_image,
+        thresh=int(threshold * np.max(scoremap_image)),
+        maxval=255,
+        type=cv2.THRESH_BINARY)
+    contours = cv2.findContours(
+        image=thr_gray_heatmap,
+        mode=cv2.RETR_EXTERNAL,
+        method=cv2.CHAIN_APPROX_SIMPLE)[_CONTOUR_INDEX]
+
+    if len(contours) == 0:
+        return np.asarray([[0, 0, 0, 0]]), 1
+
+    if not multi_contour_eval:
+        contours = [max(contours, key=cv2.contourArea)]
+
+    estimated_boxes = []
+    for contour in contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        x0, y0, x1, y1 = x, y, x + w, y + h
+        x1 = min(x1, width - 1)
+        y1 = min(y1, height - 1)
+        estimated_boxes.append([x0, y0, x1, y1])
+
+    return np.asarray(estimated_boxes), len(contours)
 
 
 def _make_distinct_colors(n, seed=0, s=0.65, v=0.95):
@@ -97,7 +159,7 @@ def _pick_topk_classes(up_logits, keep_k=5, background_id=0, small_obj_tau=0.7, 
 def logits_to_mask_keep_topk(
     patch_logits, out_h, out_w, grid=(14,14),
     keep_k=5, background_id=0,
-    select_mode="sum", small_obj_tau=0.7,
+    select_mode="sum", small_obj_tau=0.7, bg_thresh=0.0,
     reassign_to_kept=False
 ):
     """
@@ -133,15 +195,18 @@ def logits_to_mask_keep_topk(
         not_kept = [i for i in range(C) if i not in kept_set]
         if len(not_kept) > 0:
             mask_logits[:, not_kept] = float('-inf')
-        mask = mask_logits.argmax(dim=1)[0]
+        probs = mask_logits.softmax(dim=1)
+        max_probs, mask = probs[0].max(dim=0)
+        mask[max_probs < bg_thresh] = background_id
     else:
         # Strict method: argmax first, then force non-kept to background
-        raw_mask = up_logits.argmax(dim=1)[0]
-        mask = raw_mask.clone()
+        probs = up_logits.softmax(dim=1)
+        max_probs, mask = probs[0].max(dim=0)
         # send non-kept to background
         allowed = torch.tensor(list(kept_set), device=mask.device)
         keep_bool = torch.isin(mask, allowed)
         mask[~keep_bool] = background_id
+        mask[max_probs < bg_thresh] = background_id
 
     return mask, kept_ids, up_logits
 
@@ -224,8 +289,9 @@ def main(args):
         h, w = model.visual.input_resolution, model.visual.input_resolution
         if args.backbone == 'ViT-B/16':
             image_features, attn_weight_list = model.encode_image(image, h, w, attn_mask=1)   # image [1, 3, 224, 224] image features [1, 197, 512], attn_weight [1, 197, 197]
+            attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)
         elif 'RN' in args.backbone:
-            image_features, attn_weight_list = model.encode_image(image)    # image [1, 3, 224, 224] image features [1, 1024, 50], attn_weight [1, 50, 50]
+            image_features, attn_weight = model.encode_image(image)    # image [1, 3, 224, 224] image features [1, 1024, 50], attn_weight [1, 50, 50]
             image_features = image_features.transpose(1, 2)
 
     # No fusion: directly using local patch features to obtain class of local patch
@@ -233,18 +299,62 @@ def main(args):
     image_features = image_features / image_features.norm(dim=1, keepdim=True)
     text_features = text_features / text_features.norm(dim=1, keepdim=True)
 
-    # cosine similarity as logits
-    logit_scale = model.logit_scale.exp()
-    logits_per_patch = logit_scale * image_features @ text_features.t()
+    logit_scale = model.logit_scale.exp()  # 100
+    logits = logit_scale * image_features @ text_features.t()  # [1, 1201, 103]    #torch.Size([1, 197, 81])
+    logits_per_patch = logits[:, 1:, :]  # [1, 1200, 103]
+    logits_per_patch = logits_per_patch.softmax(dim=-1)  # [1, 1200, 103]
+
+    if args.attn_corr:
+        attn_weight_list_updated = [aw[:, 1:, 1:] for aw in attn_weight_list]  # len(attn_weight)=12 elements # shape [1, 196, 196]
+        attn_weight = torch.stack(attn_weight_list_updated[:-1], dim=0)[:]  # [12, 1, 196, 196] pick the last three layers: [3, 1, 196, 196]
+        attn_weight = torch.mean(attn_weight, dim=0)[0]  # [196, 196]
+        if args.global_corr:
+            global_attn_weight_list = [aw[:, :1, 1:] for aw in attn_weight_list]
+            global_attn_weight = torch.stack(global_attn_weight_list, dim=0).mean(dim=0)[0]  # [1, 196]
+            global_attn_weight = global_attn_weight.repeat(attn_weight_list_updated[0].shape[1], 1)
+            attn_weight = 0.8 * attn_weight + 0.2 * global_attn_weight
+
+        if args.attn_mask:
+            attn_vote = torch.stack(attn_weight_list_updated[:-1], dim=0).squeeze()  # [12, 1200, 1200]
+
+            thres0 = attn_vote.reshape(attn_vote.shape[0], -1)  # [12, 1440000]
+            thres0 = torch.mean(thres0, dim=-1).reshape(attn_vote.shape[0], 1, 1)  # [12, 1, 1]
+            thres0 = thres0.repeat(1, attn_vote.shape[1], attn_vote.shape[2])  # [12, 1200, 1200]
+
+            attn_cnt = attn_vote > thres0  # [12, 1200, 1200]
+            attn_cnt = attn_cnt.float()  # [12, 1200, 1200]
+            attn_cnt = torch.sum(attn_cnt, dim=0)  # [1200, 1200]
+            attn_cnt = attn_cnt >= 11  # [1200, 1200]  M_attn
+            attn_weight = attn_weight * attn_cnt.float()  # [196, 196]  M_attn * A_l
+
+        logits_coarse = logits_per_patch.squeeze()  # [1200, 103]   P_coarse
+        logits_per_patch = torch.matmul(attn_weight, logits_per_patch)  # [1, 1200, 103]    M_attn * A_l * P_coarse
+        logits_per_patch = logits_per_patch.squeeze()  # [1200, 103]
+        if args.cls_mask:
+            logits_per_patch = mask_attn(logits_coarse, logits_per_patch, h, w, attn_weight)  # [1200, 103] P_refined = M_attn * A_l * M_cls * P_coarse
+
+    # # cosine similarity as logits
+    # logit_scale = model.logit_scale.exp()
+    # logits_per_patch = logit_scale * image_features @ text_features.t()
+    # if args.attn_corr:
+    #     logits_per_patch = logits_per_patch.softmax(dim=-1)
+    #     logits_per_patch = torch.matmul(attn_weight, logits_per_patch)
     # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
     # instead of using class label per patch, resize the logits to original image size and polt per pixel mask
     if args.backbone == 'ViT-B/16':
         grid = (14, 14)
     elif 'RN' in args.backbone:
         grid = (7, 7)
+    # mask, kept_ids, _ = logits_to_mask_keep_topk(
+    #     logits_per_patch.squeeze()[1:], h, w, grid=grid,
+    #     keep_k=5, background_id=0,
+    #     select_mode="sum", small_obj_tau=0.7,
+    #     reassign_to_kept=True  # set True to fallback to kept classes
+    # )
+
     mask, kept_ids, _ = logits_to_mask_keep_topk(
-        logits_per_patch.squeeze()[1:], h, w, grid=grid,
-        keep_k=5, background_id=0,
+        logits_per_patch.squeeze(), h, w, grid=grid,
+        keep_k=50, background_id=0,
         select_mode="sum", small_obj_tau=0.7,
         reassign_to_kept=False  # set True to fallback to kept classes
     )
@@ -256,11 +366,15 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='coco', help='experiment type, e.g. celebA, FFHQ or AFHQ')
-    parser.add_argument('--img_pth', type=str, default='/Users/yifanlu/Desktop/Datasets/coco/val2014/COCO_val2014_000000145512.jpg')
-    parser.add_argument('--n_attr', type=int, default=80, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--img_pth', type=str, default='/Users/yifanlu/Desktop/Datasets/coco2014/val2014/COCO_val2014_000000572055.jpg')
+    parser.add_argument('--n_attr', type=int, default=2, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
     parser.add_argument('--score_type', type=str, default='EvalCS', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
     parser.add_argument('--backbone', type=str, default='ViT-B/16', help='backbone for CLIP, e.g. ViT-B/16 or RN50, RN101')
+    parser.add_argument('--attn_corr', action='store_true', help='whether or not using attention weights to correct logits')
+    parser.add_argument('--global_corr', action='store_true', help='whether or not using attention weights to correct logits')
+    parser.add_argument('--attn_mask', action='store_true', help='whether or not using attention weights to correct logits')
+    parser.add_argument('--cls_mask', action='store_true', help='whether or not using attention weights to correct logits')
 
     args = parser.parse_args()
     main(args)
