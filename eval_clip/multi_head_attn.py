@@ -118,6 +118,7 @@ def multi_head_attention_forward(query: Tensor,
     if not use_separate_proj_weight:
         if torch.equal(query, key) and torch.equal(key, value):     # Text embedding will use this branch, Image embedding will also use this branch
             # self-attention
+            print(query.dtype, query.device, in_proj_weight.dtype, in_proj_weight.device, in_proj_bias.dtype, in_proj_bias.device)
             q, k, v = linear(query, in_proj_weight, in_proj_bias).chunk(3, dim=-1)  # query [197, 1000, 768] in_proj_weight [2304, 768] in_proj_bias [2304], xA^T+b, result shape [197, 1000, 2304] -> [197, 1000, 768*3]
 
         elif torch.equal(key, value):
