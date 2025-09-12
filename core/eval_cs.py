@@ -126,15 +126,19 @@ def get_evalcs_local_vit(img_features, text_features, attn_weight_list):
     print(f"calculating EvalCS with local ViT")
 
     # normalize features
-    text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [n_attr, 512]
+    text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [n_attr, 512] or [2 * n_attr, 512]
     image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [n_batch, 197, 512]
 
     # cosine similarity as logits
     logit_scale = 100.000
-    logits_per_patch = logit_scale * image_features_norm @ text_features.t()    # [n_batch, 197, n_attr]
-    # logits_per_patch = logits_per_patch.softmax(dim=-1)
-    attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)
+    logits_per_patch = logit_scale * image_features_norm @ text_features.t()    # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
+    # logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2]//2])
+    # logits_per_patch = logits_per_patch.softmax(dim=2)[:,:,1]   # [n_batch, 197, n_attr]
+    # # logits_per_patch = logits_per_patch.softmax(dim=-1)
+    attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)     # [n_batch, 197, 197]
     logits_per_patch = torch.matmul(attn_weight, logits_per_patch)  # [n_batch, 197, 197] [n_batch, 197, n_attr] [n_batch, 197, n_attr]
+    logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2] // 2])
+    logits_per_patch = logits_per_patch.softmax(dim=2)[:, :, 1]
     # logits_per_patch = logits_per_patch.softmax(dim=-1)
     # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
 

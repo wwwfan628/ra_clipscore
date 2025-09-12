@@ -1,12 +1,20 @@
 attr_dict = {}
 
+attr_dict['imagenet_1_USER'] = [
+    'basketball'
+]
+
 attr_dict['coco_1_USER'] = [
     'airplane'
 ]
 
-attr_dict['coco_2_USER'] = [
-    'background',
-    'zebra',
+attr_dict['coco_6_USER'] = [
+    'airplane',
+    'dining table',
+    'giraffe',
+    'car',
+    'umbrella',
+    'sheep'
 ]
 
 attr_dict['coco_80_USER'] = [

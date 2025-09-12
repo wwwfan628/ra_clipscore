@@ -104,19 +104,6 @@
 #python main_try.py --real_dir /Users/yifanlu/Downloads/ffhq_5000 --gen_dir /Users/yifanlu/Downloads/LDM50_out --score_type EvalCS > output_EvalCS_ffhq_ldm50.log 2>&1;
 #python main_try.py --real_dir /Users/yifanlu/Downloads/ffhq_5000 --gen_dir /Users/yifanlu/Downloads/LDM200_out --score_type EvalCS > output_EvalCS_ffhq_ldm200.log 2>&1;
 
-
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman100 --score_type EvalCS > output_evalCS_100.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman200 --score_type EvalCS > output_evalCS_200.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman300 --score_type EvalCS > output_evalCS_300.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman400 --score_type EvalCS > output_evalCS_400.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman500 --score_type EvalCS > output_evalCS_500.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman600 --score_type EvalCS > output_evalCS_600.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman700 --score_type EvalCS > output_evalCS_700.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman800 --score_type EvalCS > output_evalCS_800.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman900 --score_type EvalCS > output_evalCS_900.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman000 --gen_dir /Users/yifanlu/Desktop/Datasets/CelebA_gender/man1k_woman1000 --score_type EvalCS > output_evalCS_1000.log 2>&1;
-
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/furniture5k_nsmsw1 --gen_dir /Users/yifanlu/Desktop/Datasets/furniture5k_nsmsw2 --score_type EvalCS > output_evalCS_nmsw1vsnmsw2.log 2>&1;
-python main_try_local_vit.py --real_dir /Users/yifanlu/Desktop/Datasets/furniture5k_nsmsw1 --gen_dir /Users/yifanlu/Desktop/Datasets/furniture5k_smnsw1 --score_type EvalCS > output_evalCS_nmsw1vssmnw1.log 2>&1;
+python main_try_local_vit_imagenet.py
 
 echo "Finish!"
