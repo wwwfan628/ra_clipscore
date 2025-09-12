@@ -299,6 +299,7 @@ def multi_head_attention_forward(query: Tensor,
     attn_output = torch.bmm(attn_output_weights, v)     # [12000, 197, 197] * [12000, 197, 64] = [12000, 197, 64]
     assert list(attn_output.size()) == [bsz * num_heads, tgt_len, head_dim]
     attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)     # [197, 1000,  768=12*64]
+    print(attn_output.dtype, attn_output.device, out_proj_weight.dtype, out_proj_weight.device, out_proj_bias.dtype, out_proj_bias.device)
     attn_output = linear(attn_output, out_proj_weight, out_proj_bias)    # [197, 1000, 768] [768, 768] [768] = [197, 1000, 768]
     #if return_qkv:
     q = q.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim) # [12000, 197, 64] -> [197, 1000, 768=12*64]
