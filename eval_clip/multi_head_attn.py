@@ -302,8 +302,8 @@ def multi_head_attention_forward(query: Tensor,
     # attn_output = attn_output.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim)     # [197, 1000,  768=12*64]
     # print('multi_head_attn.py 302: ', attn_output.dtype, attn_output.device, out_proj_weight.dtype, out_proj_weight.device, out_proj_bias.dtype, out_proj_bias.device)
     # multi_head_attn.py 302:  torch.float32 cuda:0 torch.float16 cuda:0 torch.float16 cuda:0
-    out_proj_weight = out_proj_weight.to(attn_output.dtype)
-    out_proj_bias = out_proj_bias.to(attn_output.dtype) if out_proj_bias is not None else None
+    # out_proj_weight = out_proj_weight.to(attn_output.dtype)
+    # out_proj_bias = out_proj_bias.to(attn_output.dtype) if out_proj_bias is not None else None
     attn_output = linear(attn_output, out_proj_weight, out_proj_bias)    # [197, 1000, 768] [768, 768] [768] = [197, 1000, 768]
     #if return_qkv:
     q = q.transpose(0, 1).contiguous().view(tgt_len, bsz, embed_dim) # [12000, 197, 64] -> [197, 1000, 768=12*64]
