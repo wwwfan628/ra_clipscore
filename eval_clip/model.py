@@ -380,6 +380,7 @@ class ResidualAttentionBlock_local(nn.Module):
         else:
             attn_output, attn_weight, q, k, v = self.attention(self.ln_1(x), mask=mask, layer=layer)  # (L,N,E) (N,L,L) attn_output [197, 1000, 768] attn_weight [1000, 197, 197] q, k, v [197, 1000, 768]
             x = x + attn_output  # [197, 1000, 768] + [197, 1000, 768]
+            print('model.py 383: ', x.dtype, x.device, self.ln_2(x).dtype, self.mlp.c_fc.weight.dtype, self.mlp.c_fc.bias.dtype, self.mlp.c_proj.weight.dtype, self.mlp.c_proj.bias.dtype)
             x = x + self.mlp(self.ln_2(x))  # [197, 1000, 768]
             return x, attn_weight, q, k, v  # [197, 1000, 768], [1000, 197, 197], [197, 1000, 768]
 
