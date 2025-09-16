@@ -380,7 +380,12 @@ class ResidualAttentionBlock_local(nn.Module):
         else:
             attn_output, attn_weight, q, k, v = self.attention(self.ln_1(x), mask=mask, layer=layer)  # (L,N,E) (N,L,L) attn_output [197, 1000, 768] attn_weight [1000, 197, 197] q, k, v [197, 1000, 768]
             x = x + attn_output  # [197, 1000, 768] + [197, 1000, 768]
-            print('model.py 383: ', x.dtype, x.device, self.ln_2(x).dtype, self.mlp.c_fc.weight.dtype, self.mlp.c_fc.bias.dtype, self.mlp.c_proj.weight.dtype, self.mlp.c_proj.bias.dtype)
+            # print('model.py 383: ', x.dtype, x.device, self.ln_2(x).dtype, self.mlp.c_fc.weight.dtype, self.mlp.c_fc.bias.dtype, self.mlp.c_proj.weight.dtype, self.mlp.c_proj.bias.dtype)
+            # model.py 383: torch.float32 cuda: 0 torch.float32 torch.float16 torch.float16 torch.float16 torch.float16
+            self.mlp.c_fc.weight = self.mlp.c_fc.weight.to(x.dtype)
+            self.mlp.c_fc.bias = self.mlp.c_fc.bias.to(x.dtype) if self.mlp.c_fc.bias is not None else None
+            self.mlp.c_proj.weight = self.mlp.c_proj.weight.to(x.dtype)
+            self.mlp.c_proj.bias = self.mlp.c_proj.bias.to(x.dtype) if self.mlp.c_proj.bias is not None else None
             x = x + self.mlp(self.ln_2(x))  # [197, 1000, 768]
             return x, attn_weight, q, k, v  # [197, 1000, 768], [1000, 197, 197], [197, 1000, 768]
 
