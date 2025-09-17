@@ -104,6 +104,9 @@
 #python main_try.py --real_dir /Users/yifanlu/Downloads/ffhq_5000 --gen_dir /Users/yifanlu/Downloads/LDM50_out --score_type EvalCS > output_EvalCS_ffhq_ldm50.log 2>&1;
 #python main_try.py --real_dir /Users/yifanlu/Downloads/ffhq_5000 --gen_dir /Users/yifanlu/Downloads/LDM200_out --score_type EvalCS > output_EvalCS_ffhq_ldm200.log 2>&1;
 
-python main_try_local_vit_imagenet.py
+# python main_try_local_vit_imagenet.py
+
+cd /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics
+/proj/berzelius-2024-331/users/x_yiflu/.conda/envs/py310/bin/python main_try_local_vit_imagenet.py --exp imagenet_exp --real_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/Imagenet256-LDM
 
 echo "Finish!"
