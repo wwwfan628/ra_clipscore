@@ -107,6 +107,6 @@
 # python main_try_local_vit_imagenet.py
 
 cd /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics
-/proj/berzelius-2024-331/users/x_yiflu/.conda/envs/py310/bin/python main_try_local_vit_imagenet.py --exp imagenet_exp --real_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/Imagenet256-LDM
+/proj/berzelius-2024-331/users/x_yiflu/.conda/envs/py310/bin/python main_try_local_vit_imagenet.py --exp imagenet_exp --real_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/imagenet256-StyleGAN-XL
 
 echo "Finish!"
