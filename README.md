@@ -28,14 +28,32 @@ $ mv img_align_celeba Img
 
 - **ImageNet**
 
-Use the download links from [official website](https://www.image-net.org/index.php) or command lines below:
-```
-$ wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar
-$ tar -xvf ILSVRC2012_img_train.tar
-$ wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar
-$ tar -xvf ILSVRC2012_img_val.tar
-$ wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_test_v10102019.tar
-$ tar -xvf ILSVRC2012_img_test_v10102019.tar
+Use the download links from [official website](https://www.image-net.org/index.php) or bash below:
+
+```shell
+# 1. Download training set (~138 GB)
+wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_train.tar
+
+# Extract outer tar (contains 1000 class tarballs)
+mkdir train && tar -xvf ILSVRC2012_img_train.tar -C train
+
+# Extract each class tarball into its own folder
+cd train
+for f in *.tar; do
+    d=$(basename "$f" .tar)
+    mkdir "$d"
+    tar -xvf "$f" -C "$d"
+    rm "$f"   # optional: remove tarball after extraction
+done
+
+cd ..
+# 2. Download validation set (~6.3 GB)
+wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_val.tar
+mkdir val && tar -xvf ILSVRC2012_img_val.tar -C val
+
+# 3. Download test set (~7 GB, labels not public)
+wget https://www.image-net.org/data/ILSVRC/2012/ILSVRC2012_img_test_v10102019.tar
+mkdir test && tar -xvf ILSVRC2012_img_test_v10102019.tar -C test
 ```
 
 - **COCO**
