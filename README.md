@@ -5,9 +5,7 @@ To run the experiments, use following command line
 $ nohup sh run.sh &
 ```
 
-## Experiments
-
-### Datasets
+## Datasets Preparation
 
 - **FFHQ**
 
@@ -20,8 +18,8 @@ a folder containing 50k images for evaluation.
 - **CelebA**
 
 Official website for [CelebA Dataset](https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) to download the dataset directly from 
-[google drive](https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg).
-Rename the folders after downloading:
+[Google Drive](https://drive.google.com/drive/folders/0B7EVK8r0v71pWEZsZE9oNnFzTm8?resourcekey=0-5BR16BdXnb8hVj6CNHKzLg). Remember to delete the first row of `list_attr_celeba.txt`, so it contains only the table of attributes.
+Rename the image folder after downloading:
 ```
 $ mv img_align_celeba Img
 ```
@@ -78,3 +76,20 @@ $ unzip annotations_trainval2014.zip
 $ unzip image_info_test2014.zip
 ```
 - **Furniture15K**
+The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/datasets/udaysankarmukherjee/furniture-image-dataset?resource=download).
+
+
+## Experiments
+
+### 1) Experiments Repetition
+
+#### Multiclass Classification on COCO
+
+#### Injection Experiments
+- Translation FFHQ dataset with [DiffuseIT](https://github.com/cyclomon/DiffuseIT). Copy `translate_ffhq_diffuseIT.py` 
+to DiffuseIT folder. Translate with following code:
+```
+
+```
+
+#### Dataset Comparison

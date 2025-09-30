@@ -16,8 +16,11 @@ def main(args):
 
     print(f"Total images found: {len(all_images)}")
 
-    # randomly sample 50k
-    subset = random.sample(all_images, 50000)
+    if args.random:
+        # randomly sample images
+        subset = random.sample(all_images, args.num_img)
+    else:
+        subset = all_images[args.start_index : args.start_index + args.num_img]
 
     # copy to destination
     for i, src in enumerate(subset):
@@ -25,13 +28,16 @@ def main(args):
         dst = os.path.join(args.dst_root, filename)
         shutil.copy(src, dst)
 
-    print("Done! 50k images saved in:", args.dst_root)
+    print(f"Done! {args.num_img} images saved in:", args.dst_root)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--src_root', type=str, default='/proj/berzelius-2024-331/users/x_yiflu/ffhq-dataset/images1024x1024', help='source root path')
+    parser.add_argument('--src_root', type=str, default='/home/x_yiflu/dataset/Datasets/ffhq/ffhq_full', help='source root path')
     parser.add_argument('--dst_root', type=str, default='/home/x_yiflu/dataset/Datasets/ffhq/ffhq_50k', help='destination root path')
+    parser.add_argument('--num_img', type=int, default='50000', help='number of images')
+    parser.add_argument('--start_index', type=int, default='0', help='sample from this index')
+    parser.add_argument('--random', action='store_true', help='whether to sample the images randomly')
 
     args = parser.parse_args()
     main(args)
