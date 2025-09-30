@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH -J eval
 #SBATCH --gpus 1
-#SBATCH -t 0-12:00:00
-#SBATCH --mail-type=END,FAIL
+#SBATCH -t 1-00:00:00
+#SBATCH --mail-type=BEGIN,END,FAIL
 #SBATCH --mail-user=yifanlu@kth.se
 #SBATCH --output /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_imagenet.out
 #SBATCH --error  /proj/berzelius-2024-331/users/x_yiflu/interpretable_evaluation_metrics/logs/%J_imagenet.err

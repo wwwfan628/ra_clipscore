@@ -90,11 +90,9 @@ The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/dat
 Remember to download checkpoints [imagenet 256x256](https://drive.google.com/file/d/1kfCPMZLaAcpoIcvzTHwVVJ_qDetH-Rns/view) 
 and [FFHQ 256x256](https://drive.google.com/file/d/1-oY7JjRtET4QP3PIWg3ilxAo4VfjCa3J/view), put them in `./checkpoints`. 
 Download [pre-trained ArcFace](https://drive.google.com/file/d/1SJa5qVNM6jGZdmsnUsGNhjtrssGYuJfT/view), put it in `./id_model`.
-Copy `translate_ffhq_diffuseIT.py` 
-
-to DiffuseIT folder. Translate with following code:
+Copy `translate_ffhq_diffuseIT.sh` to DiffuseIT folder. Translate with following code:
 ```
-
+$ sh translate_ffhq_diffuseIT.sh "Make Up"
 ```
 
 #### Dataset Comparison
