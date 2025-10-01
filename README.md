@@ -86,6 +86,7 @@ The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/dat
 #### Multiclass Classification on COCO
 
 #### Injection Experiments
+- Create `FFHQ_50k` and `FFHQ_1k` datasets with `./dataset_process/ffhq_50k.py`
 - Translation FFHQ dataset with [DiffuseIT](https://github.com/cyclomon/DiffuseIT). 
 Remember to download checkpoints [imagenet 256x256](https://drive.google.com/file/d/1kfCPMZLaAcpoIcvzTHwVVJ_qDetH-Rns/view) 
 and [FFHQ 256x256](https://drive.google.com/file/d/1-oY7JjRtET4QP3PIWg3ilxAo4VfjCa3J/view), put them in `./checkpoints`. 
@@ -94,5 +95,6 @@ Copy `translate_ffhq_diffuseIT.sh` to DiffuseIT folder. Translate with following
 ```
 $ sh translate_ffhq_diffuseIT.sh "Make Up"
 ```
+- Create mixed datasets with script `./dataset_process/prepare_injection_datasets.py`
 
 #### Dataset Comparison

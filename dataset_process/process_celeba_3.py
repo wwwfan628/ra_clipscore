@@ -31,8 +31,8 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--img_folder_path', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA/Img')  # CelebA images folder
-    parser.add_argument('--ann_file_path', type=str, default='/Users/yifanlu/Desktop/Datasets/CelebA/Anno/list_attr_celeba.txt')  # CelebA attributes annotation file path
+    parser.add_argument('--img_folder_path', type=str, default='/Users/yifanlu/Downloads/Datasets/CelebA/Img')  # CelebA images folder
+    parser.add_argument('--ann_file_path', type=str, default='/Users/yifanlu/Downloads/list_attr_celeba.txt')  # CelebA attributes annotation file path
     parser.add_argument('--num_figs', type=int, default=5000)
     parser.add_argument('--output_path', type=str, default='/Users/yifanlu/Desktop/CelebA_gender')  # save under this path
 

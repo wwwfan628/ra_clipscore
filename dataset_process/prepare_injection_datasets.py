@@ -17,7 +17,7 @@ def main(args):
             src = os.path.join(args.trans_root, img)
             dst = os.path.join(dst_path, img)
             shutil.copy(src, dst)
-            print(f"Done! {i*100} images saved in:", dst_path)
+        print(f"Done! {i*100} images saved in:", dst_path)
 
 
 
