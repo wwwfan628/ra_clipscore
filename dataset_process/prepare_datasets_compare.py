@@ -55,9 +55,9 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--celeba_img_root', type=str, default='/Users/yifanlu/Downloads/Datasets/CelebA/Img')  # CelebA images folder
-    parser.add_argument('--celeba_ann_file_path', type=str, default='/Users/yifanlu/Downloads/list_attr_celeba.txt')  # CelebA attributes annotation file path
-    parser.add_argument('--dst_root', type=str, default='/Users/yifanlu/Desktop/CelebA_gender')  # save under this path
+    parser.add_argument('--celeba_img_root', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Img')  # CelebA images folder
+    parser.add_argument('--celeba_ann_file_path', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Anno/list_attr_celeba.txt')  # CelebA attributes annotation file path
+    parser.add_argument('--dst_root', type=str, default='/home/x_yiflu/dataset/Datasets/Dataset_Compare')  # save under this path
 
     args = parser.parse_args()
 

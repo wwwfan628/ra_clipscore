@@ -96,5 +96,9 @@ Copy `translate_ffhq_diffuseIT.sh` to DiffuseIT folder. Translate with following
 $ sh translate_ffhq_diffuseIT.sh "Make Up"
 ```
 - Create mixed datasets with script `./dataset_process/prepare_injection_datasets.py`
+```
+$ python prepare_injection_datasets.py --trans_root PATH/TO/DIFFUSEIT/GENERATED/FOLDER
+```
+
 
 #### Dataset Comparison
