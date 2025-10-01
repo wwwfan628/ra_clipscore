@@ -7,7 +7,7 @@ def main(args):
         os.makedirs(dst_path, exist_ok=True)
 
         # copy ffhq_50k folder and rename in one step
-        shutil.copytree(args.ffhq50k_root, dst_path)
+        shutil.copytree(args.ffhq50k_root, dst_path, dirs_exist_ok=True)
         print(f"Copied FFHQ50k {args.ffhq50k_root} → {dst_path}")
         translated_images = [img for img in os.listdir(args.trans_root) if img.endswith('.png')]
         subset = translated_images[:i*100]
