@@ -76,7 +76,8 @@ $ unzip annotations_trainval2014.zip
 $ unzip image_info_test2014.zip
 ```
 - **Furniture15K**
-The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/datasets/udaysankarmukherjee/furniture-image-dataset?resource=download).
+The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/datasets/udaysankarmukherjee/furniture-image-dataset?resource=download). Preprocess the dataset with `./dataset_process/furniture_process.py`.
+
 
 
 ## Experiments
@@ -85,13 +86,14 @@ The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/dat
 
 #### Multiclass Classification on COCO
 
+
 #### Injection Experiments
 - Create `FFHQ_50k` and `FFHQ_1k` datasets with `./dataset_process/ffhq_50k.py`
 - Translation FFHQ dataset with [DiffuseIT](https://github.com/cyclomon/DiffuseIT). 
 Remember to download checkpoints [imagenet 256x256](https://drive.google.com/file/d/1kfCPMZLaAcpoIcvzTHwVVJ_qDetH-Rns/view) 
 and [FFHQ 256x256](https://drive.google.com/file/d/1-oY7JjRtET4QP3PIWg3ilxAo4VfjCa3J/view), put them in `./checkpoints`. 
 Download [pre-trained ArcFace](https://drive.google.com/file/d/1SJa5qVNM6jGZdmsnUsGNhjtrssGYuJfT/view), put it in `./id_model`.
-Copy `translate_ffhq_diffuseIT.sh` to DiffuseIT folder. Translate with following code:
+Copy `translate_ffhq_diffuseIT.sh` to DiffuseIT folder. Translate with following code, which takes 16h for 1000 figures with A100:
 ```
 $ sh translate_ffhq_diffuseIT.sh "Make Up"
 ```
@@ -102,3 +104,4 @@ $ python prepare_injection_datasets.py --trans_root PATH/TO/DIFFUSEIT/GENERATED/
 
 
 #### Dataset Comparison
+- Create datasets `A`, `B` and `C` with script `./dataset_process/prepare_datasets_compare.py`

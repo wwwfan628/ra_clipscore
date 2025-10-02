@@ -27,7 +27,7 @@ def get_text_features_eval_clip(text_list):
     with torch.no_grad():
         text = eval_clip.tokenize(text_list).to(device) # [44, 77]
         text_features = model.encode_text(text) # [44, 512]
-    return text_features
+    return text_features.cpu().numpy()
 
 
 def get_text_features_eval_clip_local_vit(text_list):
@@ -38,7 +38,7 @@ def get_text_features_eval_clip_local_vit(text_list):
     with torch.no_grad():
         text = eval_clip.tokenize(text_list).to(device) # [44, 77]
         text_features = model.encode_text(text) # [44, 512]
-    return text_features
+    return text_features.cpu().numpy()
 
 
 def get_img_features_eval_clip(img_dir, batch_size=1000):
@@ -58,9 +58,9 @@ def get_img_features_eval_clip(img_dir, batch_size=1000):
         for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):
             image_features, _ = model.encode_image(datas.to(device))   # datas [1000, 3, 224, 224]  image features [1000, 512, 50]
             # image_features = model.encode_image(datas.to(device))
-            img_features_list.append(image_features)
+            img_features_list.append(image_features.cpu().numpy())
 
-    img_features = torch.cat(img_features_list) # [5000, 512, 50]
+    img_features = np.concatenate(img_features_list) # [5000, 512, 50]
     return img_features
 
 
@@ -76,92 +76,143 @@ def get_img_features_eval_clip_local_vit(img_dir, batch_size=1000):
                                              num_workers=2)
 
     img_features_list = []
+    attn_weights_list = []
 
     with torch.no_grad():
         for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):   # [1000, 3, 224, 224]
-            h, w = model.visual.input_resolution, model.visual.input_resolution
-            image_features, attn_weight_list = model.encode_image(datas.to(device), h, w, attn_mask=1)   # datas [1000, 3, 224, 224]  image features [1000, 512, 50]
-            # image_features = model.encode_image(datas.to(device))
-            img_features_list.append(image_features)
+            image_features, attn_weights = model.encode_image(datas.to(device), attn_mask=1)   # datas [1000, 3, 224, 224]  image features [1000, 197, 512] attn_weights is a list with 12 elements, each element has a shape of [1000, 197, 197]
+            img_features_list.append(image_features.cpu().numpy())
+            attn_weights_list.append([attn_weight.cpu().numpy() for attn_weight in attn_weights[:-1]]) # ignores the last layer, which is to train the global token and losing the spatial info
 
-    img_features = torch.cat(img_features_list) # [5000, 512, 50]
-    return img_features, attn_weight_list
+    img_features = np.concatenate(img_features_list) # [50000=num of batch 50 x batch size 1000, 197, 512]
+    attn_weights = np.concatenate(attn_weights_list) # [num_layer 11 x num_batch 50 x batch_size 1000, 197, 197]
+    return img_features, attn_weights
 
 
-def get_evalcs(img_features, text_features):
-    assert text_features.shape[0] % 2 == 0
-    print(f"calculating EvalCS")
+# def get_evalcs(img_features, text_features):
+#     assert text_features.shape[0] % 2 == 0
+#     print(f"calculating EvalCS")
+#
+#     # normalize features
+#     text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
+#     image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [5000, 512, 50]
+#
+#     # Class-Specific Region Feature Aggregation
+#     output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+#     b, c, _ = output.shape  # b 5000 c 44
+#     output_half = output[:, c // 2:]  # [5000, 22, 50]
+#     w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 50]
+#     w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 50]
+#     output = 5 * (output * w).sum(-1)  # [5000, 44]
+#
+#     b, c = output.shape
+#
+#     # convert the shape of logits to [b, 2, num_class]
+#     logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+#     Softmax = torch.nn.Softmax(dim=1)
+#     scores = Softmax(logits).cpu()[:, 1]    # [5000, 22]
+#
+#     # # Class-Specific Region Feature Aggregation
+#     # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+#     # b, a, p = output.shape  # b 5000 a 44 p 50
+#     # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
+#     # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
+#     # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]
+#     # scores = 5 * (scores_per_patch * w).sum(-1)  # [5000, 22]
+#     return scores
 
-    # normalize features
-    text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
-    img_features = img_features.transpose(1,2)
-    image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [5000, 512, 50]
 
-    # Class-Specific Region Feature Aggregation
-    output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
-    b, c, _ = output.shape  # b 5000 c 44
-    output_half = output[:, c // 2:]  # [5000, 22, 50]
-    w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 50]
-    w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 50]
-    output = 5 * (output * w).sum(-1)  # [5000, 44]
+# def get_evalcs_local_vit(img_features, text_features, attn_weight_list):
+#     print(f"calculating EvalCS with local ViT")
+#
+#     # normalize features
+#     text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [n_attr, 512] or [2 * n_attr, 512]
+#     img_features = img_features.permute(0,2,1) # [n_batch, 197, 512] -> [n_batch, 512, 197]
+#     image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [n_batch, 512, 197]
+#
+#     # Class-Specific Region Feature Aggregation (Whole Image Score)
+#     output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [n_batch, 512, 197] weight [2 * n_attr, 512, 1] out [n_batch, 2 * n_attr, 197]
+#     b, c, _ = output.shape  # b 5000 c 44
+#     output_half = output[:, c // 2:]  # [5000, 22, 197]
+#     w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 197]
+#     w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 197]
+#     output = 5 * (output * w).sum(-1)  # [5000, 44]
+#
+#     b, c = output.shape
+#
+#     # convert the shape of logits to [b, 2, num_class]
+#     logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+#     Softmax = torch.nn.Softmax(dim=1)
+#     image_scores = Softmax(logits).cpu()[:, 1]    # [5000, 22]
+#
+#     # cosine similarity as logits: local patches score
+#     logit_scale = 100.000
+#     logits_per_patch = logit_scale * image_features_norm.permute(0,2,1) @ text_features.t()    # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
+#     # logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2]//2])
+#     # logits_per_patch = logits_per_patch.softmax(dim=2)[:,:,1]   # [n_batch, 197, n_attr]
+#     # # logits_per_patch = logits_per_patch.softmax(dim=-1)
+#     attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)     # [n_batch, 197, 197]
+#     logits_per_patch = torch.matmul(attn_weight, logits_per_patch)  # [n_batch, 197, 197] [n_batch, 197, n_attr] [n_batch, 197, n_attr]
+#     logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2] // 2])
+#     logits_per_patch = logits_per_patch.softmax(dim=2)[:, :, 1]
+#     # logits_per_patch = logits_per_patch.softmax(dim=-1)
+#     # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
+#
+#
+#
+#     # # Class-Specific Region Feature Aggregation
+#     # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+#     # b, a, p = output.shape  # b 5000 a 44 p 50
+#     # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
+#     # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
+#     # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]
+#     # scores = 5 * (scores_per_patch * w).sum(-1)  # [5000, 22]
+#     return logits_per_patch
 
-    b, c = output.shape
+def get_evalcs_local_vit(img_dir, text_list, batch_size=1000):
+    print(f"********** calculating EvalCS with local ViT **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = eval_clip.load("ViT-B/16", device=device)
+    model.eval()
 
-    # convert the shape of logits to [b, 2, num_class]
-    logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
-    Softmax = torch.nn.Softmax(dim=1)
-    scores = Softmax(logits).cpu()[:, 1]    # [5000, 22]
+    dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=2)
 
-    # # Class-Specific Region Feature Aggregation
-    # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
-    # b, a, p = output.shape  # b 5000 a 44 p 50
-    # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
-    # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
-    # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]
-    # scores = 5 * (scores_per_patch * w).sum(-1)  # [5000, 22]
+    text = eval_clip.tokenize(text_list).to(device)
+
+    scores_list = []
+    scores_per_patch_list = []
+
+    with torch.no_grad():
+        for index, (images) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            scores, scores_per_patch = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+            scores_list.append(scores.cpu().numpy())
+            scores_per_patch_list.append(scores_per_patch.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+    scores_per_patch = np.concatenate(scores_per_patch_list)  # [50000, 196, n_attr]  binary classification scores for each class of each patch
+
+    return scores, scores_per_patch
+
+
+def get_evalcs_local_rn(img_dir, text_list, batch_size=1000):
+    print(f"********** calculating EvalCS with local RN **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = eval_clip.load("RN101", device=device)
+    model.eval()
+
+    dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=2)
+
+    text = eval_clip.tokenize(text_list).to(device)
+
+    scores_list = []
+
+    with torch.no_grad():
+        for index, (images) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            scores = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+            scores_list.append(scores.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+
     return scores
-
-
-def get_evalcs_local_vit(img_features, text_features, attn_weight_list):
-    print(f"calculating EvalCS with local ViT")
-
-    # normalize features
-    text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [n_attr, 512] or [2 * n_attr, 512]
-    image_features_norm = img_features / img_features.norm(dim=1, keepdim=True) # [n_batch, 197, 512]
-
-    # cosine similarity as logits
-    logit_scale = 100.000
-    logits_per_patch = logit_scale * image_features_norm @ text_features.t()    # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
-    # logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2]//2])
-    # logits_per_patch = logits_per_patch.softmax(dim=2)[:,:,1]   # [n_batch, 197, n_attr]
-    # # logits_per_patch = logits_per_patch.softmax(dim=-1)
-    attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)     # [n_batch, 197, 197]
-    logits_per_patch = torch.matmul(attn_weight, logits_per_patch)  # [n_batch, 197, 197] [n_batch, 197, n_attr] [n_batch, 197, n_attr]
-    logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2] // 2])
-    logits_per_patch = logits_per_patch.softmax(dim=2)[:, :, 1]
-    # logits_per_patch = logits_per_patch.softmax(dim=-1)
-    # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
-
-    # # Class-Specific Region Feature Aggregation
-    # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
-    # b, c, _ = output.shape  # b 5000 c 44
-    # output_half = output[:, c // 2:]  # [5000, 22, 50]
-    # w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 50]
-    # w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 50]
-    # output = 5 * (output * w).sum(-1)  # [5000, 44]
-    #
-    # b, c = output.shape
-    #
-    # # convert the shape of logits to [b, 2, num_class]
-    # logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
-    # Softmax = torch.nn.Softmax(dim=1)
-    # scores = Softmax(logits).cpu()[:, 1]    # [5000, 22]
-
-    # # Class-Specific Region Feature Aggregation
-    # output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
-    # b, a, p = output.shape  # b 5000 a 44 p 50
-    # logits_per_patch = output.reshape(b, 2, a // 2, p)  # [5000, 2, 22, 50]
-    # scores_per_patch = F.softmax(logits_per_patch, dim=1)[:, 1]   # [5000, 22, 50]
-    # w = F.softmax(output[:, a // 2:], dim=-1)  # [5000, 22, 50]
-    # scores = 5 * (scores_per_patch * w).sum(-1)  # [5000, 22]
-    return logits_per_patch

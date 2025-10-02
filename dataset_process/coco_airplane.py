@@ -76,7 +76,7 @@ def find_coco_airplanes_by_side(
             split_x = split * W
             img_area = float(W * H)
 
-            # ✅ ALL bboxes must satisfy the side rule (and area filter)
+            # ALL bboxes must satisfy the side rule (and area filter)
             keep = True
             for ann in anns:
                 x, y, w, h = ann["bbox"]

@@ -363,7 +363,8 @@ class ResidualAttentionBlock_local(nn.Module):
             if isinstance(mask, int):
                 if layer == 11: # last layer
                     self.attn_mask = 1 - torch.eye(x.shape[0], x.shape[0])      # [197, 197] [[0,1...1],[1,0,1...],...,[1,...,1,0]]
-                    self.attn_mask = self.attn_mask * float(-100)  # float('-inf')  # float(-100) [[0,-100...-100],[-100,0,-100...],...,[-100,...,-100,0]] last layer -> attn_weight becomes identity matrix
+                    self.attn_mask[0, :] = 0    # [[0,0...0],[1,0,1...],...,[1,...,1,0]]
+                    self.attn_mask = self.attn_mask * float(-100)  # float('-inf')  # float(-100) [[0,0...0],[-100,0,-100...],...,[-100,...,-100,0]] last layer -> attn_weight becomes identity matrix, except from the first row, i.e. global token conduct attention but not other local tokens
                 else:
                     self.attn_mask = None  # except from last layer, attn_mask set to None
             else:
@@ -789,9 +790,9 @@ class CLIP_ViT_Local(nn.Module):
     def dtype(self):
         return self.visual.conv1.weight.dtype
 
-    def encode_image(self, image, H, W, attn_mask=None, use_clstoken=False):
+    def encode_image(self, image, attn_mask=None, use_clstoken=False):
         # return self.visual(image.type(self.dtype))
-        x, feamap, attn, v = self.visual(image.type(self.dtype), H, W, attn_mask=attn_mask)  # x [1000, 197, 512] (patch 16*16->224//16=14*224//16=14 patches) len(feamap)=12 element shape [197, 1000, 768] len(attn)=12 element shape [1000, 197, 197] len(v)=12 element shape [1000, 196, 768]
+        x, feamap, attn, v = self.visual(image.type(self.dtype), self.visual.input_resolution, self.visual.input_resolution, attn_mask=attn_mask)  # x [1000, 197, 512] (patch 16*16->224//16=14*224//16=14 patches) len(feamap)=12 element shape [197, 1000, 768] len(attn)=12 element shape [1000, 197, 197] len(v)=12 element shape [1000, 196, 768]
         if use_clstoken:
             x = x[:, 0, :]
         return x, attn
@@ -812,20 +813,37 @@ class CLIP_ViT_Local(nn.Module):
         return x
 
     def forward(self, image, text):
-        image_features = self.encode_image(image)
+        image_features, attn_weight_list = self.encode_image(image)
         text_features = self.encode_text(text)
 
         # normalized features
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        image_features = image_features / image_features.norm(dim=-1, keepdim=True)     # [n_batch, 197, 512]
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)    # [2 * n_attr, 512]
 
-        # cosine similarity as logits
-        logit_scale = self.logit_scale.exp()
-        logits_per_image = logit_scale * image_features @ text_features.t()
-        logits_per_text = logit_scale * text_features @ image_features.t()
+        # cosine similarity as logits: local patches score
+        logit_scale = 100.000
+        output = logit_scale * image_features @ text_features.t()  # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
+        attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
+        logits_per_patch = torch.matmul(attn_weight, output)  # [n_batch, 197, 197] [n_batch, 197, 2 * n_attr] [n_batch, 197, 2 * n_attr]
+        logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2] // 2])
+        scores_per_patch = logits_per_patch.softmax(dim=2)[:, 1:, 1]     # [5000, 196, n_attr]
+        # logits_per_patch = logits_per_patch.softmax(dim=-1)
+        # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
 
-        # shape = [global_batch_size, global_batch_size]
-        return logits_per_image, logits_per_text
+        # Class-Specific Region Feature Aggregation
+        output = output.permute(0, 2, 1)  # [5000, 197, 2 * n_attr] -> [5000, 2 * n_attr, 197]
+        b, c, _ = output.shape  # b 5000 c 44
+        output_half = output[:, c // 2:]  # [5000, 22, 197]
+        w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 197]
+        w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 197]
+        output = (output * w).sum(-1)  # [5000, 44]
+
+        # convert the shape of logits to [b, 2, num_class]
+        logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+        Softmax = torch.nn.Softmax(dim=1)
+        scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
+
+        return scores, scores_per_patch
 
 
 class CLIP_conv_proj(nn.Module):
@@ -945,20 +963,30 @@ class CLIP_conv_proj(nn.Module):
         return x
 
     def forward(self, image, text):
+
         image_features = self.encode_image(image)
         text_features = self.encode_text(text)
 
-        # normalized features
-        image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-        text_features = text_features / text_features.norm(dim=-1, keepdim=True)
+        # normalize features
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
+        image_features_norm = image_features / image_features.norm(dim=1, keepdim=True)  # [5000, 512, 50]
 
-        # cosine similarity as logits
-        logit_scale = self.logit_scale.exp()
-        logits_per_image = logit_scale * image_features @ text_features.t()
-        logits_per_text = logit_scale * text_features @ image_features.t()
+        # Class-Specific Region Feature Aggregation
+        output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+        b, c, _ = output.shape  # b 5000 c 44
+        output_half = output[:, c // 2:]  # [5000, 22, 50]
+        w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 50]
+        w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 50]
+        output = 5 * (output * w).sum(-1)  # [5000, 44]
 
-        # shape = [global_batch_size, global_batch_size]
-        return logits_per_image, logits_per_text
+        b, c = output.shape
+
+        # convert the shape of logits to [b, 2, num_class]
+        logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+        Softmax = torch.nn.Softmax(dim=1)
+        scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
+
+        return scores
 
 
 def convert_weights(model: nn.Module):

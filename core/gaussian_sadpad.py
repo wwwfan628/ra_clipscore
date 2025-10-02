@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 from utils.attribute_list import *
 import scipy
+import seaborn as sns
 
 
 def load_attributes_list(attr_list_name, n_attr):
@@ -15,22 +16,27 @@ def plot_bar(result, labels, name, save_path=None):
     # check if results has the same length as labels
     assert len(result) == len(labels)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.set_xticks(np.arange(len(labels)))
-    ax.set_xticklabels(labels, rotation=90)
-    ax.bar(labels, result, width=0.8)
+    # 设置 seaborn 风格
+    sns.set_theme(style="whitegrid")  # 白色背景+网格
 
-    plt.title(f"{name} \n mean={np.sum(result)/(result.shape[0])}, var={np.var(result, dtype=np.float32)}")
-    plt.ylabel('each attribute difference between 2 datasets', fontsize=5)
+    plt.figure(figsize=(10, 5))
+    ax = sns.barplot(x=labels, y=result, color="skyblue")
+
+    # 设置标题和标签
+    plt.title(f"{name}\nmean={np.mean(result):.4f}, var={np.var(result, dtype=np.float32):.4f}")
+    plt.ylabel('each attribute difference between 2 datasets', fontsize=8)
+    plt.xticks(rotation=90)
+
     plt.tight_layout()
-    plt.savefig(f"{save_path}/{name}.png", dpi=2000)
-    # plt.show()
+    if save_path is not None:
+        plt.savefig(f"{save_path}/{name}.png", dpi=300)
+    else:
+        plt.show()
 
 
 def plot_single(results, attr_list, save_path):
     print('###### Plotting results of single attribute ######')
-    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'mmd_polynomial', 'mmd_rbf' ]
     save_path = os.path.join(save_path, 'figs_single_attribute')
 
     if not os.path.exists(save_path):
@@ -103,7 +109,8 @@ def compute_single(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov
     KL_real_gen_single = []
     KL_gen_real_single = []
     f_distance_single = []
-    kernel_distance_single = []
+    mmd_polynomial_single = []
+    mmd_rbf_single = []
 
     for n, i in tqdm(enumerate(np.arange(len(attr_list))), total=len(attr_list)):
         real_mean_i = np.expand_dims(real_mean, 1)[i]
@@ -124,10 +131,13 @@ def compute_single(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov
         # Frechet Distance
         f_distance_single.append(compute_frechet_distance(real_mean_i, gen_mean_i, real_var_i, gen_var_i))
 
-        # Kernel Distance
-        kernel_distance_single.append(compute_kernel_distance(real_score_i, gen_score_i))
+        # MMD with polynomial kernel
+        mmd_polynomial_single.append(compute_mmd_polynomial(real_score_i, gen_score_i))
 
-    return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(kernel_distance_single)]
+        # MMD with RBF kernel
+        mmd_rbf_single.append(compute_mmd_rbf(real_score_i, gen_score_i))
+
+    return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(mmd_polynomial_single), np.array(mmd_rbf_single)]
 
 
 def compute_single_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
@@ -138,7 +148,8 @@ def compute_single_reduced(real_score, gen_score, real_mean, gen_mean, real_cov,
     KL_real_gen_single = []
     KL_gen_real_single = []
     f_distance_single = []
-    kernel_distance_single = []
+    mmd_polynomial_single = []
+    mmd_rbf_single = []
 
     for n, i in tqdm(enumerate(np.arange(len(attr_list))), total=len(attr_list)):
         real_mean_i = np.expand_dims(real_mean, 1)[i]
@@ -159,10 +170,13 @@ def compute_single_reduced(real_score, gen_score, real_mean, gen_mean, real_cov,
         # Frechet Distance
         f_distance_single.append(compute_frechet_distance(real_mean_i, gen_mean_i, real_var_i, gen_var_i))
 
-        # Kernel Distance
-        kernel_distance_single.append(compute_kernel_distance(real_score_i, gen_score_i))
+        # MMD with polynomial kernel
+        mmd_polynomial_single.append(compute_mmd_polynomial(real_score_i, gen_score_i))
 
-    return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(kernel_distance_single)]
+        # MMD with RBF kernel
+        mmd_rbf_single.append(compute_mmd_rbf(real_score_i, gen_score_i))
+
+    return [np.array(KL_real_gen_single), np.array(KL_gen_real_single), np.array(difference_single), np.array(f_distance_single), np.array(mmd_polynomial_single), np.array(mmd_rbf_single)]
 
 
 
@@ -173,7 +187,8 @@ def compute_pair(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, 
     KL_real_gen_pair = []
     KL_gen_real_pair = []
     f_distance_pair = []
-    kernel_distance_pair = []
+    mmd_polynomial_pair = []
+    mmd_rbf_pair = []
 
     for n, (i, j) in tqdm(enumerate(combinations(np.arange(len(attr_list)), 2)), total=len(list(combinations(attr_list, 2)))):
         real_mean_ij = real_mean[[i, j]]
@@ -193,10 +208,13 @@ def compute_pair(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, 
         # Frechet Distance
         f_distance_pair.append(compute_frechet_distance(real_mean_ij, gen_mean_ij, real_cov_ij, gen_cov_ij))
 
-        # Kernel Distance
-        kernel_distance_pair.append(compute_kernel_distance(real_score_ij, gen_score_ij))
+        # MMD with polynomial kernel
+        mmd_polynomial_pair.append(compute_mmd_polynomial(real_score_ij, gen_score_ij))
 
-    return [np.array(KL_real_gen_pair), np.array(KL_gen_real_pair), np.array(difference_pair), np.array(f_distance_pair), np.array(kernel_distance_pair)]
+        # MMD with RBF kernel
+        mmd_rbf_pair.append(compute_mmd_rbf(real_score_ij, gen_score_ij))
+
+    return [np.array(KL_real_gen_pair), np.array(KL_gen_real_pair), np.array(difference_pair), np.array(f_distance_pair), np.array(mmd_polynomial_pair), np.array(mmd_rbf_pair)]
 
 
 def compute_pair_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
@@ -207,7 +225,8 @@ def compute_pair_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, g
     KL_real_gen_pair = []
     KL_gen_real_pair = []
     f_distance_pair = []
-    kernel_distance_pair = []
+    mmd_polynomial_pair = []
+    mmd_rbf_pair = []
 
     for n, (i, j) in tqdm(enumerate(combinations(np.arange(len(attr_list)), 2)), total=len(list(combinations(attr_list, 2)))):
         real_mean_ij = real_mean[[i, j]]
@@ -227,10 +246,13 @@ def compute_pair_reduced(real_score, gen_score, real_mean, gen_mean, real_cov, g
         # Frechet Distance
         f_distance_pair.append(compute_frechet_distance(real_mean_ij, gen_mean_ij, real_cov_ij, gen_cov_ij))
 
-        # Kernel Distance
-        kernel_distance_pair.append(compute_kernel_distance(real_score_ij, gen_score_ij))
+        # MMD with polynomial kernel
+        mmd_polynomial_pair.append(compute_mmd_polynomial(real_score_ij, gen_score_ij))
 
-    return [np.array(KL_real_gen_pair), np.array(KL_gen_real_pair), np.array(difference_pair), np.array(f_distance_pair), np.array(kernel_distance_pair)]
+        # MMD with RBF kernel
+        mmd_rbf_pair.append(compute_mmd_rbf(real_score_ij, gen_score_ij))
+
+    return [np.array(KL_real_gen_pair), np.array(KL_gen_real_pair), np.array(difference_pair), np.array(f_distance_pair), np.array(mmd_polynomial_pair), np.array(mmd_rbf_pair)]
 
 
 def compute_all(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, attr_list):
@@ -247,10 +269,13 @@ def compute_all(real_score, gen_score, real_mean, gen_mean, real_cov, gen_cov, a
     # Frechet Distance
     f_distance_all = compute_frechet_distance(real_mean, gen_mean, real_cov, gen_cov)
 
-    # Kernel Distance
-    kernel_distance_all = compute_kernel_distance(real_score, gen_score)
+    # MMD with polynomial kernel
+    mmd_polynomial_all = compute_mmd_polynomial(real_score, gen_score)
 
-    return [KL_real_gen_all, KL_gen_real_all, difference_all, f_distance_all, kernel_distance_all]
+    # MMD with RBF kernel
+    mmd_rbf_all = compute_mmd_rbf(real_score, gen_score)
+
+    return [KL_real_gen_all, KL_gen_real_all, difference_all, f_distance_all, mmd_polynomial_all, mmd_rbf_all]
 
 
 def compute_KL_divergence_1d_gaussian_pdf(p_mean, q_mean, p_var, q_var):
@@ -278,15 +303,70 @@ def compute_frechet_distance(real_mean, gen_mean, real_cov, gen_cov):
     return float(frechet_distance)
 
 
-def compute_kernel_distance(real_features, gen_features, num_subsets=100, max_subset_size=1000):
-    n = real_features.shape[1]
+def compute_mmd_polynomial(real_features, gen_features, num_subsets=100, max_subset_size=1000):
+    # real_features: [N_r, D], gen_features: [N_g, D]
+    n = real_features.shape[1]  # embedding dim for the scaling inside kernel
     m = min(min(real_features.shape[0], gen_features.shape[0]), max_subset_size)
-    t = 0
-    for _subset_idx in range(num_subsets):
+
+    def poly_kernel(A, B, n):
+        return (A @ B.T / n + 1.0) ** 3
+
+    acc = 0.0
+    for _ in range(num_subsets):
+        # Subsample m examples from each set to construct subsets
         x = gen_features[np.random.choice(gen_features.shape[0], m, replace=False)]
         y = real_features[np.random.choice(real_features.shape[0], m, replace=False)]
-        a = (x @ x.T / n + 1) ** 3 + (y @ y.T / n + 1) ** 3
-        b = (x @ y.T / n + 1) ** 3
-        t += (a.sum() - np.diag(a).sum()) / (m - 1) - b.sum() * 2 / m
-    kernel_distance = t / num_subsets / m
-    return float(kernel_distance)
+
+        K_xx = poly_kernel(x, x, n)   # (m, m)  including the diagonal
+        K_yy = poly_kernel(y, y, n)   # (m, m)  including the diagonal
+        K_xy = poly_kernel(x, y, n)   # (m, m)  including the diagonal
+
+        # Biased / minimum-variance estimator: use the full kernel matrix mean (including the diagonal)
+        mmd2 = K_xx.mean() + K_yy.mean() - 2.0 * K_xy.mean()
+        acc += mmd2
+
+    return float(acc / num_subsets)
+
+
+_SIGMA = 10.0   # RBF bandwidth
+_SCALE = 1000.0 # readability scale
+
+def compute_mmd_rbf(x: np.ndarray, y: np.ndarray, sigma: float = _SIGMA, scale: float = _SCALE):
+    """
+    Biased (minimum-variance) MMD with Gaussian RBF kernel, NumPy-only.
+
+    Args:
+        x: array of shape (n, d)
+        y: array of shape (m, d)   (n and m may differ)
+        sigma: RBF bandwidth
+        scale: output scaling factor
+
+    Returns:
+        float MMD value
+    """
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(y, dtype=np.float64)
+
+    gamma = 1.0 / (2.0 * sigma * sigma)
+
+    # Squared norms
+    x_sq = np.sum(x * x, axis=1)              # (n,)
+    y_sq = np.sum(y * y, axis=1)              # (m,)
+
+    # Pairwise squared distances
+    # D_xx[i,j] = ||x_i - x_j||^2 = ||x_i||^2 + ||x_j||^2 - 2 x_i·x_j
+    D_xx = x_sq[:, None] + x_sq[None, :] - 2.0 * (x @ x.T)        # (n, n)
+    D_xy = x_sq[:, None] + y_sq[None, :] - 2.0 * (x @ y.T)        # (n, m)
+    D_yy = y_sq[:, None] + y_sq[None, :] - 2.0 * (y @ y.T)        # (m, m)
+
+    # Gaussian kernels
+    K_xx = np.exp(-gamma * D_xx)
+    K_xy = np.exp(-gamma * D_xy)
+    K_yy = np.exp(-gamma * D_yy)
+
+    # Biased estimator: include diagonal terms in K_xx and K_yy
+    k_xx = K_xx.mean()
+    k_xy = K_xy.mean()
+    k_yy = K_yy.mean()
+
+    return float(scale * (k_xx + k_yy - 2.0 * k_xy))

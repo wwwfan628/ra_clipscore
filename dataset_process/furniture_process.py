@@ -27,8 +27,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset_path', type=str, default='/Users/yifanlu/Desktop/Datasets/furniture')  # furniture dataset folder
-    parser.add_argument('--num_figs', type=int, default=5000)
-    parser.add_argument('--target_path', type=str, default='/Users/yifanlu/Desktop/Datasets/furniture_5k')  # save under this path
+    parser.add_argument('--num_figs', type=int, default=15000)
+    parser.add_argument('--target_path', type=str, default='/Users/yifanlu/Desktop/Datasets/furniture_15k')  # save under this path
 
     args = parser.parse_args()
 
