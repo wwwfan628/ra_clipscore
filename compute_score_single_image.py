@@ -11,7 +11,7 @@ from PIL import Image
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--img_path', type=str, default='./man.png', help='path to image')
+    parser.add_argument('--img_path', type=str, default='./bedroom.png', help='path to image')
     parser.add_argument('--score_type', type=str, default='EvalCS_local_vit', help='score type, e.g. HCS for this script')
 
     args = parser.parse_args()
@@ -23,13 +23,14 @@ if __name__ == '__main__':
                  'bookshelf', 'mirror', 'nightstand', 'carpet', 'television', 'refrigerator', 'washing machine',
                  'microwave oven', 'bowl', 'plate', 'cup', 'curtain', 'pillow', 'clock', 'computer']
 
-    img_name = os.path.basename(args.img_path)
+    img_name = os.path.basename(args.img_path).split('.')[0]
 
-    print(f"********** calculating EvalCS with local ViT **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     if 'vit' in args.score_type:
+        print(f"********** calculating EvalCS with local ViT **********")
         model, preprocess = eval_clip.load("ViT-B/16", device=device)
     elif 'rn' in args.score_type:
+        print(f"********** calculating EvalCS with local RN **********")
         model, preprocess = eval_clip.load("RN101", device=device)
     model.eval()
 

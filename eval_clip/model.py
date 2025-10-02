@@ -964,7 +964,7 @@ class CLIP_conv_proj(nn.Module):
 
     def forward(self, image, text):
 
-        image_features = self.encode_image(image)
+        image_features, _ = self.encode_image(image)
         text_features = self.encode_text(text)
 
         # normalize features
