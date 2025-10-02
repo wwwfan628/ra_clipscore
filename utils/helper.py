@@ -11,5 +11,4 @@ def str2bool(v):
         return False
     
 def load_candidate(experiment_name, n_attr):
-    experiment_name = experiment_name.rsplit('_', 1)[0]
     return attr_dict[experiment_name][:n_attr]

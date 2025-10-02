@@ -16,7 +16,7 @@ def main(args):
 
     experiment_name = f"{args.exp}_{args.n_attr}_{args.score_type}"
 
-    text_list = utils.load_candidate(experiment_name=experiment_name, n_attr=args.n_attr)
+    text_list = utils.load_candidate(experiment_name=f"{args.exp}_{args.n_attr}", n_attr=args.n_attr)
 
     text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
 
