@@ -288,7 +288,7 @@ def compute_KL_divergence_1d_gaussian_pdf(p_mean, q_mean, p_var, q_var):
 def compute_KL_divergence_high_dim_gaussian_pdf(p_mean, q_mean, p_cov, q_cov):
     # KL(p,q) = 0.5 * [ log(det(phi_q)/det(phi_p)) - d + tr(cov_q^(-1) @ cov_p) + ((mean_q - mean_p).T @ cov_q^(-1) @ (mean_q - mean_p))]  p represents original, q generated
 
-    part_1 = np.log(np.linalg.det(q_cov) / np.linalg.det(p_cov)) - 2
+    part_1 = np.log(np.linalg.det(q_cov) / np.linalg.det(p_cov)) - p_cov.shape[0]
     part_2 = np.trace(np.linalg.inv(q_cov) @ p_cov)
     part_3 = (q_mean - p_mean).T @ np.linalg.inv(q_cov) @ (q_mean - p_mean)
 
@@ -331,42 +331,59 @@ def compute_mmd_polynomial(real_features, gen_features, num_subsets=100, max_sub
 _SIGMA = 10.0   # RBF bandwidth
 _SCALE = 1000.0 # readability scale
 
-def compute_mmd_rbf(x: np.ndarray, y: np.ndarray, sigma: float = _SIGMA, scale: float = _SCALE):
+def compute_mmd_rbf(x: np.ndarray, y: np.ndarray,
+                              sigma: float = 1.0,
+                              num_subsets: int = 50,
+                              subset_size: int = 1000,
+                              rng: np.random.Generator = None):
     """
-    Biased (minimum-variance) MMD with Gaussian RBF kernel, NumPy-only.
+    Unbiased MMD^2 with Gaussian RBF kernel using random subsets (KID-style).
 
     Args:
-        x: array of shape (n, d)
-        y: array of shape (m, d)   (n and m may differ)
-        sigma: RBF bandwidth
-        scale: output scaling factor
+        x: array (n, d)
+        y: array (m, d)
+        sigma: RBF bandwidth (if None -> median heuristic可加)
+        num_subsets: how many random subsets to average
+        subset_size: number of samples per subset from each distribution
+        rng: np.random.Generator for reproducibility
 
     Returns:
-        float MMD value
+        mean, std of MMD^2 estimates
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
+    n, d = x.shape[0], x.shape[1]
+    m = y.shape[0]
 
+    rng = np.random.default_rng() if rng is None else rng
     gamma = 1.0 / (2.0 * sigma * sigma)
 
-    # Squared norms
-    x_sq = np.sum(x * x, axis=1)              # (n,)
-    y_sq = np.sum(y * y, axis=1)              # (m,)
+    scores = []
+    for _ in range(num_subsets):
+        # 随机子集
+        idx_x = rng.choice(n, subset_size, replace=False)
+        idx_y = rng.choice(m, subset_size, replace=False)
+        X = x[idx_x]
+        Y = y[idx_y]
 
-    # Pairwise squared distances
-    # D_xx[i,j] = ||x_i - x_j||^2 = ||x_i||^2 + ||x_j||^2 - 2 x_i·x_j
-    D_xx = x_sq[:, None] + x_sq[None, :] - 2.0 * (x @ x.T)        # (n, n)
-    D_xy = x_sq[:, None] + y_sq[None, :] - 2.0 * (x @ y.T)        # (n, m)
-    D_yy = y_sq[:, None] + y_sq[None, :] - 2.0 * (y @ y.T)        # (m, m)
+        # pairwise 距离
+        D_xx = np.sum((X[:, None, :] - X[None, :, :])**2, axis=-1)
+        D_yy = np.sum((Y[:, None, :] - Y[None, :, :])**2, axis=-1)
+        D_xy = np.sum((X[:, None, :] - Y[None, :, :])**2, axis=-1)
 
-    # Gaussian kernels
-    K_xx = np.exp(-gamma * D_xx)
-    K_xy = np.exp(-gamma * D_xy)
-    K_yy = np.exp(-gamma * D_yy)
+        K_xx = np.exp(-gamma * D_xx)
+        K_yy = np.exp(-gamma * D_yy)
+        K_xy = np.exp(-gamma * D_xy)
 
-    # Biased estimator: include diagonal terms in K_xx and K_yy
-    k_xx = K_xx.mean()
-    k_xy = K_xy.mean()
-    k_yy = K_yy.mean()
+        # 去掉对角 (无偏估计)
+        np.fill_diagonal(K_xx, 0.0)
+        np.fill_diagonal(K_yy, 0.0)
 
-    return float(scale * (k_xx + k_yy - 2.0 * k_xy))
+        term_x = K_xx.sum() / (subset_size * (subset_size - 1))
+        term_y = K_yy.sum() / (subset_size * (subset_size - 1))
+        term_xy = K_xy.mean()
+
+        mmd2 = term_x + term_y - 2.0 * term_xy
+        scores.append(mmd2)
+
+    return float(np.mean(scores))       # float(np.std(scores))
