@@ -176,7 +176,7 @@ def get_evalcs_local_vit(img_dir, text_list, batch_size=1000):
     model.eval()
 
     dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=8)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=64)
 
     text = eval_clip.tokenize(text_list).to(device)
 
@@ -202,7 +202,7 @@ def get_evalcs_local_rn(img_dir, text_list, batch_size=1000):
     model.eval()
 
     dataset = CustomDataSet(main_dir=img_dir, transform=preprocess)
-    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=8)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=64)
 
     text = eval_clip.tokenize(text_list).to(device)
 
