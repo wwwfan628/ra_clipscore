@@ -52,7 +52,7 @@ def plot_single(results, attr_list, save_path):
 def plot_single_reduced(results, attr_list, save_path):
     print('###### Plotting results of single attribute ######')
     attr_list = attr_list[:10]  # only consider human face related attributes
-    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'mmd_polynomial', 'mmd_rbf']
     save_path = os.path.join(save_path, 'figs_single_attribute')
 
     if not os.path.exists(save_path):
@@ -67,7 +67,7 @@ def plot_single_reduced(results, attr_list, save_path):
 
 def plot_pair(results, attr_list, save_path, max_bar=20):
     print('###### Plotting results of pair attributes ######')
-    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'mmd_polynomial', 'mmd_rbf']
     save_path = os.path.join(save_path, 'figs_pair_attributes')
 
     if not os.path.exists(save_path):
@@ -86,7 +86,7 @@ def plot_pair(results, attr_list, save_path, max_bar=20):
 def plot_pair_reduced(results, attr_list, save_path, max_bar=20):
     print('###### Plotting results of pair attributes ######')
     attr_list = attr_list[:10]  # only consider human face related attributes
-    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'kernel_distance']
+    results_contents = ['forward_KL', 'reverse_KL', 'mean_differences', 'frechet_distance', 'mmd_polynomial', 'mmd_rbf']
     save_path = os.path.join(save_path, 'figs_pair_attributes')
 
     if not os.path.exists(save_path):
