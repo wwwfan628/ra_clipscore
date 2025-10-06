@@ -3,12 +3,12 @@ attr_dict = {}
 attr_dict['compare_20'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", \
                            "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                            "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", \
-                           "wearing earlings","beard","double chin", "young"]
+                           "wearing earrings","beard","double chin", "young"]
 
 attr_dict['injection_20'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", \
                              "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                              "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", \
-                             "wearing earlings","beard","double chin", "young"]
+                             "wearing earrings","beard","double chin", "young"]
 
 
 attr_dict['imagenet_1_USER'] = [
