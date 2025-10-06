@@ -323,7 +323,7 @@ def compute_mmd_polynomial(real_features, gen_features, num_subsets=100, max_sub
 
         # Biased / minimum-variance estimator: use the full kernel matrix mean (including the diagonal)
         mmd2 = K_xx.mean() + K_yy.mean() - 2.0 * K_xy.mean()
-        acc += mmd2
+        acc += max(0.0, mmd2)
 
     return float(acc / num_subsets)
 
@@ -331,28 +331,31 @@ def compute_mmd_polynomial(real_features, gen_features, num_subsets=100, max_sub
 _SIGMA = 10.0   # RBF bandwidth
 _SCALE = 1000.0 # readability scale
 
-def compute_mmd_rbf(x: np.ndarray, y: np.ndarray,
-                              sigma: float = 1.0,
-                              num_subsets: int = 50,
-                              subset_size: int = 1000,
-                              rng: np.random.Generator = None):
+def compute_mmd_rbf(
+    x: np.ndarray,
+    y: np.ndarray,
+    sigma: float = 1.0,
+    num_subsets: int = 50,
+    subset_size: int = 1000,
+    rng: np.random.Generator = None
+):
     """
-    Unbiased MMD^2 with Gaussian RBF kernel using random subsets (KID-style).
+    Biased (always non-negative) MMD^2 with Gaussian RBF kernel using random subsets.
 
     Args:
         x: array (n, d)
         y: array (m, d)
-        sigma: RBF bandwidth (if None -> median heuristic可加)
+        sigma: RBF bandwidth
         num_subsets: how many random subsets to average
         subset_size: number of samples per subset from each distribution
         rng: np.random.Generator for reproducibility
 
     Returns:
-        mean, std of MMD^2 estimates
+        float MMD^2 estimate (non-negative)
     """
     x = np.asarray(x, dtype=np.float64)
     y = np.asarray(y, dtype=np.float64)
-    n, d = x.shape[0], x.shape[1]
+    n, d = x.shape
     m = y.shape[0]
 
     rng = np.random.default_rng() if rng is None else rng
@@ -361,29 +364,27 @@ def compute_mmd_rbf(x: np.ndarray, y: np.ndarray,
     scores = []
     for _ in range(num_subsets):
         # 随机子集
-        idx_x = rng.choice(n, subset_size, replace=False)
-        idx_y = rng.choice(m, subset_size, replace=False)
+        idx_x = rng.choice(n, min(subset_size, n), replace=False)
+        idx_y = rng.choice(m, min(subset_size, m), replace=False)
         X = x[idx_x]
         Y = y[idx_y]
 
-        # pairwise 距离
+        # pairwise squared distances
         D_xx = np.sum((X[:, None, :] - X[None, :, :])**2, axis=-1)
         D_yy = np.sum((Y[:, None, :] - Y[None, :, :])**2, axis=-1)
         D_xy = np.sum((X[:, None, :] - Y[None, :, :])**2, axis=-1)
 
+        # RBF kernels
         K_xx = np.exp(-gamma * D_xx)
         K_yy = np.exp(-gamma * D_yy)
         K_xy = np.exp(-gamma * D_xy)
 
-        # 去掉对角 (无偏估计)
-        np.fill_diagonal(K_xx, 0.0)
-        np.fill_diagonal(K_yy, 0.0)
-
-        term_x = K_xx.sum() / (subset_size * (subset_size - 1))
-        term_y = K_yy.sum() / (subset_size * (subset_size - 1))
+        # 有偏估计: 包含对角项，理论上 MMD^2 >= 0
+        term_x = K_xx.mean()
+        term_y = K_yy.mean()
         term_xy = K_xy.mean()
 
         mmd2 = term_x + term_y - 2.0 * term_xy
-        scores.append(mmd2)
+        scores.append(max(0.0, mmd2))   # 数值保护，强制非负
 
-    return float(np.mean(scores))       # float(np.std(scores))
+    return float(np.mean(scores))
