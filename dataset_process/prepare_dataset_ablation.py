@@ -40,7 +40,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--furniture_path', type=str, default='/Users/yifanlu/Downloads/furniture_15k')  # furniture dataset folder
+    parser.add_argument('--furniture_path', type=str, default='/home/x_yiflu/dataset/Datasets/furniture_15k')  # furniture dataset folder
     parser.add_argument('--num_figs', type=int, default=50000)
     parser.add_argument('--celeba_anno_path', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Anno/list_attr_celeba.txt')
     parser.add_argument('--celeba_img_path', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Img')  # celeba dataset folder
