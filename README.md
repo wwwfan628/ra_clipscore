@@ -99,9 +99,21 @@ $ sh translate_ffhq_diffuseIT.sh "Make Up"
 ```
 - Create mixed datasets with script `./dataset_process/prepare_injection_datasets.py`
 ```
-$ python prepare_injection_datasets.py --trans_root PATH/TO/DIFFUSEIT/GENERATED/FOLDER
+$ python prepare_injection_datasets.py --trans_root /PATH/TO/DIFFUSEIT/GENERATED/FOLDER
+```
+- Compute `RA-ClipScore` with script
+```
+$ python main_injection_exp.py --real_dir /PATH/TO/REAL/DATASET --gen_dir /PATH/TO/MIXED/DATASET
 ```
 
 
 #### Dataset Comparison
 - Create datasets `A`, `B` and `C` with script `./dataset_process/prepare_datasets_compare.py`
+- Compute `RA-ClipScore` with script
+```
+$ python main_dataset_compare.py --real_dir /PATH/TO/A --gen_dir /PATH/TO/B
+```
+
+
+### 2) Ablation Study
+- Create dataset with `./dataset_process/prepare_datasets_ablation.py`
