@@ -44,6 +44,8 @@ def main(args):
         topk_idx = np.argsort(scores[:, j])[::-1][:count_positive[j]]  # indices of top k scores
         y_pred[topk_idx, j] = 1
 
+    labels[labels==-1] = 0
+
     # Per-attribute accuracy
     attr_acc = (y_pred == labels).mean(axis=0)
     mean_attr_acc = attr_acc.mean()
