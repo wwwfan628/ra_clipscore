@@ -10,6 +10,8 @@ import numpy as np
 import torch
 import time
 from scipy.stats import gaussian_kde
+import numpy as np
+from sklearn.metrics import accuracy_score, f1_score
 
 
 def main(args):
@@ -29,15 +31,17 @@ def main(args):
     attrs = ["Black_Hair", "Eyeglasses", "Male", "Smiling"]
     # calculate scores
     if 'vit' in args.score_type:
-        scores, scores_per_patch, labels = core.get_evalcs_local_vit_ablation_study(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size) # [n_img, n_attr]  [n_img, 196, n_attr]
+        scores, scores_per_patch, labels = core.get_evalcs_local_vit_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size) # [n_img, n_attr]  [n_img, 196, n_attr]
     elif 'rn' in args.score_type:
-        scores, scores_per_patch, labels = core.get_evalcs_local_rn_ablation_study(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, scores_per_patch, labels = core.get_evalcs_local_rn_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'clip_score':
-        scores, labels = core.get_cs_ablation_study(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, labels = core.get_cs_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'hcs':
-        scores, labels = core.get_hcs_ablation_study(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, labels = core.get_hcs_with_labels(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
 
     for i, attr in enumerate(attrs):
+        print(labels)
+        print(labels.shape)
         scores_positive = scores[labels[i]==1]
         scores_negative = scores[labels[i]==-1]
         scores_furniture = scores[labels[i] == 0]

@@ -218,7 +218,7 @@ def get_evalcs_local_rn(img_dir, text_list, batch_size=1000):
     return scores
 
 
-def get_evalcs_local_vit_ablation_study(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+def get_evalcs_local_vit_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating EvalCS with local ViT **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = eval_clip.load("ViT-B/16", device=device)
@@ -248,7 +248,7 @@ def get_evalcs_local_vit_ablation_study(img_dir, anno_file, attrs, text_list_pro
 
 
 
-def get_evalcs_local_rn_ablation_study(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+def get_evalcs_local_rn_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating EvalCS with local RN **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = eval_clip.load("RN101", device=device)

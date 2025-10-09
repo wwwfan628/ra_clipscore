@@ -248,7 +248,7 @@ def get_hcs_try(img_features_real, img_features_gen, text_features):
 
 #################################################################################################
 
-def get_cs_ablation_study(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+def get_cs_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating ClipScore **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/16", device=device)
@@ -275,7 +275,7 @@ def get_cs_ablation_study(img_dir, anno_file, attrs, text_list_prompt, batch_siz
     return scores, labels
 
 
-def get_hcs_ablation_study(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating HCS **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load("ViT-B/16", device=device)
