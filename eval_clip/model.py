@@ -824,22 +824,23 @@ class CLIP_ViT_Local(nn.Module):
         logit_scale = 100.000
         output = logit_scale * image_features @ text_features.t()  # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
         attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
-        logits_per_patch = torch.matmul(attn_weight, output)  # [n_batch, 197, 197] [n_batch, 197, 2 * n_attr] [n_batch, 197, 2 * n_attr]
-        logits_per_patch = logits_per_patch.reshape([logits_per_patch.shape[0], logits_per_patch.shape[1], 2, logits_per_patch.shape[2] // 2])
+        output_refined = torch.matmul(attn_weight, output)  # [n_batch, 197, 197] [n_batch, 197, 2 * n_attr] [n_batch, 197, 2 * n_attr]
+        output_refined = torch.cat([output[:, 0:1, :], output_refined[:, 1:, :]], dim=1)
+        logits_per_patch = output_refined.reshape([output_refined.shape[0], output_refined.shape[1], 2, output_refined.shape[2] // 2])
         scores_per_patch = logits_per_patch.softmax(dim=2)[:, 1:, 1]     # [5000, 196, n_attr]
         # logits_per_patch = logits_per_patch.softmax(dim=-1)
         # class_per_patch = logits_per_patch.squeeze().argmax(dim=1)[1:]
 
         # Class-Specific Region Feature Aggregation
-        output = output.permute(0, 2, 1)  # [5000, 197, 2 * n_attr] -> [5000, 2 * n_attr, 197]
-        b, c, _ = output.shape  # b 5000 c 44
-        output_half = output[:, c // 2:]  # [5000, 22, 197]
-        w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 197]
+        output_refined =  output_refined.permute(0, 2, 1)  # [5000, 197, 2 * n_attr] -> [5000, 2 * n_attr, 197]
+        b, c, _ =  output_refined.shape  # b 5000 c 44
+        output_refined_half = output_refined[:, c // 2:]  # [5000, 22, 197]
+        w_half = F.softmax(output_refined_half, dim=-1)  # [5000, 22, 197]
         w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 197]
-        output = (output * w).sum(-1)  # [5000, 44]
+        output_refined = (output_refined * w).sum(-1)  # [5000, 44]
 
         # convert the shape of logits to [b, 2, num_class]
-        logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+        logits =  output_refined.resize(b, 2, c // 2)  # [5000, 2, 22]
         Softmax = torch.nn.Softmax(dim=1)
         scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
 
