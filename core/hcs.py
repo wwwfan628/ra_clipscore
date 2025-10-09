@@ -137,6 +137,7 @@ def get_text_features(text_list, clip_backbone=CLIP_BACKBONE):
         text_features = model.encode_text(text)
     return text_features
 
+
 def get_img_features(img_dir, batch_size=1000, clip_backbone=CLIP_BACKBONE):
     # calculate image features
     print("calculating image features")
@@ -158,6 +159,7 @@ def get_img_features(img_dir, batch_size=1000, clip_backbone=CLIP_BACKBONE):
     img_features = torch.cat(img_features_list)
     return img_features
 
+
 def get_hcs_new(img_features_real, img_features_gen, text_features):
     print(f"calculating HCS")
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -172,6 +174,7 @@ def get_hcs_new(img_features_real, img_features_gen, text_features):
     similarity = (100 * img_features @ text_features.T)
 
     return similarity
+
 
 def get_dualcs(img_features, text_features):
     assert text_features.shape[0] % 2 == 0
@@ -241,4 +244,78 @@ def get_hcs_try(img_features_real, img_features_gen, text_features):
     inv_XXT = torch.inverse(XXT)
     weights = 100 * img_features @ text_features.T @ inv_XXT  # (1000, 22)
     return weights
+
+
+#################################################################################################
+
+def get_cs_ablation_study(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+    print(f"********** calculating ClipScore **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/16", device=device)
+    model.eval()
+
+    dataset = AttrDataSet(img_dir=img_dir, anno_file=anno_file, attrs=attrs, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False,
+                                             num_workers=32)
+
+    text = clip.tokenize(text_list_prompt).to(device)
+
+    scores_list = []
+    labels_list = []
+
+    with torch.no_grad():
+        for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            scores, _ = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+            scores_list.append(scores.cpu().numpy())
+            labels_list.append(labels.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+    labels = np.concatenate(labels_list)
+
+    return scores, labels
+
+
+def get_hcs_ablation_study(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
+    print(f"********** calculating HCS **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/16", device=device)
+    model.eval()
+
+    # compute mean of text embeddings and image embeddings of real dataset images
+    with torch.no_grad():
+        text = clip.tokenize(text_list_prompt).to(device)
+        text_features = model.encode_text(text)
+    text_features_mean = text_features.mean(dim=0)
+
+    ref_dataset = CustomDataSet(main_dir=ref_img_dir, transform=preprocess)
+    ref_dataloader = torch.utils.data.DataLoader(ref_dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
+    ref_img_features_list = []
+    with torch.no_grad():
+        for index, (datas) in tqdm(enumerate(ref_dataloader), total=len(ref_dataloader)):
+            ref_image_features = model.encode_image(datas.to(device))
+            ref_img_features_list.append(ref_image_features)
+    ref_img_features = torch.cat(ref_img_features_list)
+    ref_img_features_mean = ref_img_features.mean(dim=0)
+
+    # compute HCS
+    dataset = AttrDataSet(img_dir=img_dir, anno_file=anno_file, attrs=attrs, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
+
+    scores_list = []
+    labels_list = []
+    with torch.no_grad():
+        for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            images_features = model.encode_image(images.to(device))
+            images_features = images_features - ref_img_features_mean
+            text_features = text_features - text_features_mean
+            images_features /= images_features.norm(dim=-1, keepdim=True)
+            text_features /= text_features.norm(dim=-1, keepdim=True)
+            scores = (100 * images_features @ text_features.T)
+            scores_list.append(scores.cpu().numpy())
+            labels_list.append(labels.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+    labels = np.concatenate(labels_list)
+
+    return scores, labels
 
