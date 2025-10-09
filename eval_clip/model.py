@@ -116,7 +116,7 @@ class AttentionConv(nn.Module):
         self.v_proj = nn.Linear(embed_dim, embed_dim)
         self.c_proj = nn.Linear(embed_dim, output_dim or embed_dim)
 
-    def forward(self, x):
+    def forward(self, x, global_embeddings=True):
         _, _, h, w = x.shape    # x.size [1000, 2048, 7, 7]  (line 189: torch.nn.AdaptiveAvgPool2d(7) resize the last two dimensions to 7 times 7)
         if h * w + 1 != self.positional_embedding.shape[0]:
             w_spacial = self.positional_embedding[1:].permute(1, 0).reshape(1, -1, self.spec_dim, self.spec_dim)
@@ -153,12 +153,14 @@ class AttentionConv(nn.Module):
         x2 = F.linear(x2, self.c_proj.weight, self.c_proj.bias) # x2.size [50, 1000, 512] n_patches, n_batch, n_embedding
         # x2 dimension is [50, 32, 1024]
         #######################################################################
-        x3 = torch.cat([x1[0,:,:].unsqueeze(0), x2[1:]], dim=0)
-        x3 = x3.permute(1, 2, 0)
-        return x3, attn_weights
+        if global_embeddings:
+            x3 = torch.cat([x1[0,:,:].unsqueeze(0), x2[1:]], dim=0)
+            x3 = x3.permute(1, 2, 0)
+            return x3, attn_weights
         #######################################################################
-        # x2 = x2.permute(1, 2, 0)    # x2.size [1000, 512, 50]
-        # return x2, attn_weights[:, :1]  # [1000, 512, 50] [1000, 1, 50]
+        else:
+            x2 = x2.permute(1, 2, 0)    # x2.size [1000, 512, 50]
+            return x2, attn_weights[:, :1]  # [1000, 512, 50] [1000, 1, 50]
 
 
 
@@ -267,7 +269,7 @@ class ModifiedResNet_conv_proj(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x):
+    def forward(self, x, global_embeddings=True):
         def stem(x):
             for conv, bn in [(self.conv1, self.bn1), (self.conv2, self.bn2), (self.conv3, self.bn3)]:
                 x = self.relu(bn(conv(x)))
@@ -280,7 +282,7 @@ class ModifiedResNet_conv_proj(nn.Module):
         x = self.layer2(x)
         x = self.layer3(x)
         x = self.layer4(x)
-        x, attn_weights = self.attnpool(x)
+        x, attn_weights = self.attnpool(x, global_embeddings)
         return x, attn_weights  # [1000, 512, 50], [1000, 50, 50]
 
 
@@ -823,7 +825,7 @@ class CLIP_ViT_Local(nn.Module):
         # cosine similarity as logits: local patches score
         logit_scale = 100.000
         output = logit_scale * image_features @ text_features.t()  # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
-        attn_weight = torch.stack(attn_weight_list[8:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
+        attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
         output_refined = torch.matmul(attn_weight, output)  # [n_batch, 197, 197] [n_batch, 197, 2 * n_attr] [n_batch, 197, 2 * n_attr]
         output_refined = torch.cat([output[:, 0:1, :], output_refined[:, 1:, :]], dim=1)
         logits_per_patch = output_refined.reshape([output_refined.shape[0], output_refined.shape[1], 2, output_refined.shape[2] // 2])
@@ -945,8 +947,8 @@ class CLIP_conv_proj(nn.Module):
     def dtype(self):
         return self.visual.conv1.weight.dtype
 
-    def encode_image(self, image):
-        return self.visual(image.type(self.dtype))
+    def encode_image(self, image, global_embeddings=True):
+        return self.visual(image.type(self.dtype), global_embeddings=global_embeddings)
 
     def encode_text(self, text):
         x = self.token_embedding(text).type(self.dtype)  # [batch_size, n_ctx, d_model]
@@ -966,6 +968,64 @@ class CLIP_conv_proj(nn.Module):
     def forward(self, image, text):
 
         image_features, _ = self.encode_image(image)
+        text_features = self.encode_text(text)
+
+        # normalize features
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
+        image_features_norm = image_features / image_features.norm(dim=1, keepdim=True)  # [5000, 512, 50]
+
+        # Class-Specific Region Feature Aggregation
+        output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [44, 512, 1] out [5000, 44, 50]
+        b, c, _ = output.shape  # b 5000 c 44
+        output_half = output[:, c // 2:]  # [5000, 22, 50]
+        w_half = F.softmax(output_half, dim=-1)  # [5000, 22, 50]
+        w = torch.cat([w_half, w_half], dim=1)  # [5000, 44, 50]
+        output = 5 * (output * w).sum(-1)  # [5000, 44]
+
+        b, c = output.shape
+
+        # convert the shape of logits to [b, 2, num_class]
+        logits = output.resize(b, 2, c // 2)  # [5000, 2, 22]
+        Softmax = torch.nn.Softmax(dim=1)
+        scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
+
+        return scores
+
+    def compute_scores_without_local_features(self, image, text):
+
+        image_features, _ = self.encode_image(image)
+        text_features = self.encode_text(text)
+
+        # normalize features
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]
+        image_features = (image_features / image_features.norm(dim=1, keepdim=True))[:, :, 0]  # [5000, 512, 50]  [5000, 512]
+
+        logit_scale = self.logit_scale.exp()
+        logits_per_image = logit_scale * image_features @ text_features.t() # [5000, 44]
+        logits = logits_per_image.resize(logits_per_image.shape[0], 2, logits_per_image.shape[1] // 2)  # [5000, 2, 22]
+        Softmax = torch.nn.Softmax(dim=1)
+        scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
+
+        return scores
+
+    def compute_scores_without_dual_prompts(self, image, text):  # here text should be only positive
+        image_features, _ = self.encode_image(image)
+        text_features = self.encode_text(text)
+
+        # normalize features
+        text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [22, 512]
+        image_features_norm = image_features / image_features.norm(dim=1, keepdim=True)  # [5000, 512, 50]
+
+        # Class-Specific Region Feature Aggregation
+        output = 20 * F.conv1d(image_features_norm, text_features[:, :, None])  # input [5000, 512, 50] weight [22, 512, 1] out [5000, 22, 50]
+        b, c, _ = output.shape  # b 5000 c 22
+        w = F.softmax(output, dim=-1)  # [5000, 22, 50]
+        output = 5 * (output * w).sum(-1)  # [5000, 22]
+
+        return output
+
+    def compute_scores_without_global_embeddings(self, image, text):
+        image_features, _ = self.encode_image(image, global_embeddings=False)
         text_features = self.encode_text(text)
 
         # normalize features
