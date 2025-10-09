@@ -17,11 +17,11 @@ def main(args):
     annotations = pd.read_csv(args.celeba_anno_path, header=[0], delimiter=r"\s+")
     celeba_figs = annotations.index.tolist()
     random.shuffle(celeba_figs)
-    annotations_celeba5k = annotations.loc[celeba_figs[:args.num_figs]]
+    annotations_celeba50k = annotations.loc[celeba_figs[:args.num_figs]]
     figs_list_furniture15k = os.listdir(args.furniture_path)
     labels_furniture15k = np.zeros([len(figs_list_furniture15k), len(annotations.columns)])
     annotations_furniture15k = pd.DataFrame(labels_furniture15k, index=figs_list_furniture15k, columns=annotations.columns)
-    annotations_merged = pd.concat([annotations_celeba5k, annotations_furniture15k], ignore_index=False, sort=False)
+    annotations_merged = pd.concat([annotations_celeba50k, annotations_furniture15k], ignore_index=False, sort=False)
 
     for fig_file in tqdm(celeba_figs[:args.num_figs]):
         fig_path = os.path.join(args.celeba_img_path, fig_file)
