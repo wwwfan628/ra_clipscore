@@ -4,6 +4,7 @@ import os
 from PIL import Image
 import natsort
 import numpy as np
+import pandas as pd
 
 
 
@@ -31,8 +32,9 @@ class AttrDataSet(Dataset):
         self.attrs = attrs
         all_imgs = os.listdir(img_dir)
         self.total_imgs = natsort.natsorted(all_imgs)
+        anno_file = pd.read_csv(anno_file, header=[0], delimiter=",")
         self.anno_file = anno_file.loc[self.total_imgs]
-        self.labels = self.anno_file.iloc[self.attrs].values
+        self.labels = self.anno_file[self.attrs].values
 
     def __len__(self):
         return len(self.total_imgs)
