@@ -19,10 +19,27 @@ def main(args):
 
     anno_file = pd.read_csv(args.anno_file, header=[0], delimiter=",")
     # How many images are positive for each attributes
-    count_positive = (anno_file == 1).sum().values
-    attrs = (anno_file == 1).sum().index
+    # attrs = list(anno_file.columns)
+    attrs = [
+        'Arched_Eyebrows', 'Bags_Under_Eyes', 'Bald', 'Bangs', 'Big_Nose',
+        'Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Chubby', 'Double_Chin',
+        'Eyeglasses', 'Goatee', 'Gray_Hair', 'Heavy_Makeup', 'Male',
+        'Mouth_Slightly_Open', 'Mustache', 'No_Beard', 'Sideburns', 'Smiling',
+        'Straight_Hair', 'Wavy_Hair', 'Wearing_Earrings', 'Wearing_Hat',
+        'Wearing_Lipstick', 'Wearing_Necklace', 'Wearing_Necktie', 'Young'
+    ]
 
-    text_list = [a.lower().replace('_', ' ') for a in attrs]
+    count_positive = (anno_file[attrs] == 1).sum().values
+
+    # text_list = [a.lower().replace('_', ' ') for a in attrs]
+    text_list = [
+        'arched eyebrows', 'bags under eyes', 'bald', 'bangs', 'big nose',
+        'black hair', 'blond hair', 'brown hair', 'chubby', 'double chin',
+        'eyeglasses', 'goatee', 'gray hair', 'heavy makeup', 'male',
+        'mouth slightly open', 'mustache', 'beard', 'sideburns', 'smiling',
+        'straight hair', 'wavy hair', 'wearing earrings', 'wearing hat',
+        'wearing lipstick', 'wearing necklace', 'wearing necktie', 'young'
+    ]
 
     if 'vit' in args.score_type or 'rn' in args.score_type:
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
@@ -44,6 +61,7 @@ def main(args):
         topk_idx = np.argsort(scores[:, j])[::-1][:count_positive[j]]  # indices of top k scores
         y_pred[topk_idx, j] = 1
 
+    labels[:, attrs.index('No_Beard')] = labels[:, attrs.index('No_Beard')] * (-1)
     labels[labels==-1] = 0
 
     # Per-attribute accuracy
@@ -65,9 +83,9 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='celeba_classification', help='experiment name, to find the corresponding attribute list')
-    parser.add_argument('--img_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img', help='celeba50k images')  # /home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Img  /Users/yifanlu/Downloads/CelebA50k/Img
+    parser.add_argument('--img_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img', help='celeba50k images')  # /home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img  /Users/yifanlu/Downloads/CelebA50k/Img
     parser.add_argument('--ref_img_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img', help='celeba 50k')  # /home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img  /Users/yifanlu/Downloads/CelebA50k/Img
-    parser.add_argument('--anno_file', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Anno/list_attr_celeba50k.txt', help='celeba50k_furniture15k annotation file path')  # /home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt  /Users/yifanlu/Downloads/CelebA50k/Anno/list_attr_celeba50k.txt
+    parser.add_argument('--anno_file', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Anno/list_attr_celeba50k.txt', help='celeba50k_furniture15k annotation file path')  # /home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Anno/list_attr_celeba50k.txt  /Users/yifanlu/Downloads/CelebA50k/Anno/list_attr_celeba50k.txt
     parser.add_argument('--score_type', type=str, default='EvalCS_local_vit', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to extract image features')
 
