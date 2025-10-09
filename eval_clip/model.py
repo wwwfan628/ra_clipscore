@@ -823,7 +823,7 @@ class CLIP_ViT_Local(nn.Module):
         # cosine similarity as logits: local patches score
         logit_scale = 100.000
         output = logit_scale * image_features @ text_features.t()  # [n_batch, 197, n_attr] or [n_batch, 197, 2 * n_attr]
-        attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
+        attn_weight = torch.stack(attn_weight_list[8:-1], dim=0).mean(dim=0)  # [n_batch, 197, 197]
         output_refined = torch.matmul(attn_weight, output)  # [n_batch, 197, 197] [n_batch, 197, 2 * n_attr] [n_batch, 197, 2 * n_attr]
         output_refined = torch.cat([output[:, 0:1, :], output_refined[:, 1:, :]], dim=1)
         logits_per_patch = output_refined.reshape([output_refined.shape[0], output_refined.shape[1], 2, output_refined.shape[2] // 2])
