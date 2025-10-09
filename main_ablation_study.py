@@ -40,11 +40,9 @@ def main(args):
         scores, labels = core.get_hcs_with_labels(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
 
     for i, attr in enumerate(attrs):
-        print(labels)
-        print(labels.shape)
-        scores_positive = scores[labels[i]==1]
-        scores_negative = scores[labels[i]==-1]
-        scores_furniture = scores[labels[i] == 0]
+        scores_positive = scores[labels[:, i]==1]
+        scores_negative = scores[labels[:, i]==-1]
+        scores_furniture = scores[labels[:, i] == 0]
 
         # plot and save figures
         fig1, ax1 = plt.subplots()
