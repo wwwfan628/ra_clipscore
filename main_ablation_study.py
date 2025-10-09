@@ -33,15 +33,13 @@ def main(args):
     if 'vit' in args.score_type:
         scores, scores_per_patch, labels = core.get_evalcs_local_vit_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size) # [n_img, n_attr]  [n_img, 196, n_attr]
     elif 'rn' in args.score_type:
-        scores, scores_per_patch, labels = core.get_evalcs_local_rn_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, labels = core.get_evalcs_local_rn_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'clip_score':
         scores, labels = core.get_cs_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'hcs':
         scores, labels = core.get_hcs_with_labels(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
 
     for i, attr in enumerate(attrs):
-        print(scores)
-        print(scores.shape)
         scores_positive = scores[labels[:, i]==1][:, i]
         scores_negative = scores[labels[:, i]==-1][:, i]
         scores_furniture = scores[labels[:, i] == 0][:, i]

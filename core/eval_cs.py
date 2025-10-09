@@ -260,18 +260,15 @@ def get_evalcs_local_rn_with_labels(img_dir, anno_file, attrs, text_list_prompt,
     text = eval_clip.tokenize(text_list_prompt).to(device)
 
     scores_list = []
-    scores_per_patch_list = []
     labels_list = []
 
     with torch.no_grad():
         for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
-            scores, scores_per_patch = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+            scores = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
             scores_list.append(scores.cpu().numpy())
-            scores_per_patch_list.append(scores_per_patch.cpu().numpy())
             labels_list.append(labels.cpu().numpy())
 
     scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
-    scores_per_patch = np.concatenate(scores_per_patch_list)  # [50000, 196, n_attr]  binary classification scores for each class of each patch
     labels = np.concatenate(labels_list)
 
-    return scores, scores_per_patch, labels
+    return scores, labels
