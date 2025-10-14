@@ -965,10 +965,12 @@ class CLIP_conv_proj(nn.Module):
 
         return x
 
-    def forward(self, image, text):
+    def forward(self, image, text, image_features_mean=0, text_features_mean=0):
 
         image_features, _ = self.encode_image(image)
         text_features = self.encode_text(text)
+        text_features = text_features - text_features_mean
+        image_features = image_features - image_features_mean
 
         # normalize features
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [44, 512]

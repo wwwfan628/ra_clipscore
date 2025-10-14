@@ -248,12 +248,29 @@ def get_evalcs_local_vit_with_labels(img_dir, anno_file, attrs, text_list_prompt
 
 
 
-def get_evalcs_local_rn_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000, mode='full'):
+def get_evalcs_local_rn_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt, batch_size=1000, mode='full'):
     # mode: full, without_dual_prompts, without_local_features, without_global_embeddings
     print(f"********** calculating EvalCS with local RN **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = eval_clip.load("RN101", device=device)
     model.eval()
+
+    # compute mean of text embeddings and image embeddings of real dataset images
+    with torch.no_grad():
+        text = eval_clip.tokenize(text_list_prompt).to(device)
+        text_features = model.encode_text(text)
+    text_features_mean = text_features.mean(dim=0)
+
+    ref_dataset = CustomDataSet(main_dir=ref_img_dir, transform=preprocess)
+    ref_dataloader = torch.utils.data.DataLoader(ref_dataset, batch_size=batch_size, shuffle=False, drop_last=False,
+                                                 num_workers=32)
+    ref_img_features_list = []
+    with torch.no_grad():
+        for index, (datas) in tqdm(enumerate(ref_dataloader), total=len(ref_dataloader)):
+            ref_image_features = model.encode_image(datas.to(device))
+            ref_img_features_list.append(ref_image_features)
+    ref_img_features = torch.cat(ref_img_features_list)
+    ref_img_features_mean = ref_img_features.mean(dim=0)
 
     dataset = AttrDataSet(img_dir=img_dir, anno_file=anno_file, attrs=attrs, transform=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
@@ -266,7 +283,7 @@ def get_evalcs_local_rn_with_labels(img_dir, anno_file, attrs, text_list_prompt,
     with torch.no_grad():
         for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
             if mode == 'full':
-                scores = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+                scores = model(images.to(device), text, ref_img_features_mean, text_features_mean)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
             elif mode == 'without_dual_prompts':
                 scores = model.compute_scores_without_dual_prompts(images.to(device), text) # here text should be only positive
             elif mode == 'without_local_features':
