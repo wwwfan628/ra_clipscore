@@ -283,10 +283,7 @@ def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt
 
     # compute mean of text embeddings and image embeddings of real dataset images
     ########################################
-    text_list_try = ['dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
-                             'wolf', 'fox', 'rabbit', 'squirrel', 'eagle', 'penguin', 'dolphin',
-                             'whale', 'snake', 'turtle', 'frog', 'butterfly',
-                             'sofa', 'chair', 'bed', 'table', 'closet', 'bookshelf', 'mirror', 'nightstand',
+    text_list_try = ['sofa', 'chair', 'bed', 'table', 'closet', 'bookshelf', 'mirror', 'nightstand',
                              'carpet', 'television', 'refrigerator', 'washing machine', 'microwave oven', 'bowl',
                              'plate', 'cup', 'curtain', 'pillow', 'clock', 'computer']
 
