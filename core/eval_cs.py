@@ -269,8 +269,8 @@ def get_evalcs_local_rn_with_labels(img_dir, ref_img_dir, anno_file, attrs, text
         for index, (datas) in tqdm(enumerate(ref_dataloader), total=len(ref_dataloader)):
             ref_image_features, _ = model.encode_image(datas.to(device))
             ref_img_features_list.append(ref_image_features)
-    ref_img_features = torch.cat(ref_img_features_list)
-    ref_img_features_mean = ref_img_features.mean(dim=0)
+    ref_img_features = torch.cat(ref_img_features_list)[:, :, 0] # [N, 512, 50]
+    ref_img_features_mean = ref_img_features.mean(dim=0)    # [512, 50]
     print('ref_img_features.shape: ', ref_img_features.shape)
     print('ref_img_features_mean.shape: ', ref_img_features_mean.shape)
 
