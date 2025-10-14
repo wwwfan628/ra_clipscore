@@ -283,10 +283,12 @@ def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt
 
     # compute mean of text embeddings and image embeddings of real dataset images
     ########################################
-    text_list_try = ['male', 'heavy makeup', 'wearing earrings', 'black hair', 'blond hair',
-                    'wearing eyeglasses', 'wearing hat', 'young', 'with beard', 'smiling',
-                    'giraffe', 'zebra', 'penguin', 'sofa', 'chair', 'nightstand', 'carpet', 'refrigerator',
-                    'washing machine', 'microwave oven', 'curtain', 'pillow']
+    text_list_try = ['dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
+                             'wolf', 'fox', 'rabbit', 'squirrel', 'eagle', 'penguin', 'dolphin',
+                             'whale', 'snake', 'turtle', 'frog', 'butterfly',
+                             'sofa', 'chair', 'bed', 'table', 'closet', 'bookshelf', 'mirror', 'nightstand',
+                             'carpet', 'television', 'refrigerator', 'washing machine', 'microwave oven', 'bowl',
+                             'plate', 'cup', 'curtain', 'pillow', 'clock', 'computer']
 
     text_list_prompt_try = [f"This is a photo of {item}." for item in text_list_try]
 
