@@ -286,6 +286,8 @@ def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt
         text = clip.tokenize(text_list_prompt).to(device)
         text_features = model.encode_text(text)
     text_features_mean = text_features.mean(dim=0)
+    text_features = text_features - text_features_mean
+    text_features /= text_features.norm(dim=-1, keepdim=True)
 
     ref_dataset = CustomDataSet(main_dir=ref_img_dir, transform=preprocess)
     ref_dataloader = torch.utils.data.DataLoader(ref_dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
@@ -307,9 +309,7 @@ def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt
         for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
             images_features = model.encode_image(images.to(device))
             images_features = images_features - ref_img_features_mean
-            text_features = text_features - text_features_mean
             images_features /= images_features.norm(dim=-1, keepdim=True)
-            text_features /= text_features.norm(dim=-1, keepdim=True)
             scores = (100 * images_features @ text_features.T)
             scores_list.append(scores.cpu().numpy())
             labels_list.append(labels.cpu().numpy())

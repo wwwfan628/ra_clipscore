@@ -85,7 +85,11 @@ The furniture dataset can be downloaded from [Kaggle](https://www.kaggle.com/dat
 ### 1) Experiments Repetition
 
 #### Multiclass Classification on COCO
-
+- Create `CelebA50K` dataset with script `./dataset_process/celeba_50k.py`
+- Run experiments with command:
+```
+$ python main_celeba_classification.py --img_dir /PATH/TO/CelebA50k --ref_img_dir /PATH/TO/CelebA50k --anno_file /PATH/TO/CelebA50k/Anno --score_type EvalCS_local_vit
+```
 
 #### Injection Experiments
 - Create `FFHQ_50k` and `FFHQ_1k` datasets with `./dataset_process/ffhq_50k.py`
@@ -117,3 +121,46 @@ $ python main_dataset_compare.py --real_dir /PATH/TO/A --gen_dir /PATH/TO/B
 
 ### 2) Ablation Study
 - Create dataset with `./dataset_process/prepare_datasets_ablation.py`
+- Plotting figures with `main_ablation_study.py`, more details about the parameters, please read the script.
+```
+$ python main_ablation_study.py
+```
+
+### 3) Single Image (Rethinking HCS)
+
+- Attributes highly influence the evaluation results, to run experiment to obtain scores for the man image, use the following command:
+```
+$ cd sadpad
+$ python main_single.py --img_path man.png
+```
+- When using two attributes, `HCS` will provide scores that are opposite values even if semantically it has no correlations:
+```
+$ cd sadpad
+$ python main_single.py --img_path woman.png
+```
+
+### 4) Attribute-wise Evaluation of SOTA Generative Models (FFHQ)
+- Generate `50k` images using SOTA generative models, e.g.
+```
+# Diffusion Models
+$ git clone https://github.com/CompVis/latent-diffusion.git
+$ cd latent-diffusion
+$ conda env create -f environment.yaml
+$ conda activate ldm
+$ CUDA_VISIBLE_DEVICES=0 python scripts/sample_diffusion.py -r models/ldm/ffhq256/model.ckpt -l ./logs/ffhq_step200 -n 50000 --batch_size 16 -c 200 -e 0.0
+$ CUDA_VISIBLE_DEVICES=0 python scripts/sample_diffusion.py -r models/ldm/ffhq256/model.ckpt -l ./logs/ffhq_step50 -n 50000 --batch_size 16 -c 50 -e 0.0
+
+# StyleGAN2-ada
+$ git clone https://github.com/NVlabs/stylegan2-ada-pytorch.git
+$ cd stylegan2-ada-pytorch
+$ python generate.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://nvlabs-fi-cdn.nvidia.com/stylegan2-ada-pytorch/pretrained/ffhq.pkl
+
+# StyleGAN3
+$ git clone https://github.com/NVlabs/stylegan3.git
+$ cd stylegan3
+$ python gen_images.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://api.ngc.nvidia.com/v2/models/nvidia/research/stylegan3/versions/1/files/stylegan3-r-ffhq-1024x1024.pkl
+```
+- Run evaluation with script `calc_metrics.py`
+
+
+### 5) Spatial Evaluation of SOTA Generative Models (ImageNet)
