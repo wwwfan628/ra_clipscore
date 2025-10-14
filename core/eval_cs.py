@@ -271,6 +271,8 @@ def get_evalcs_local_rn_with_labels(img_dir, ref_img_dir, anno_file, attrs, text
             ref_img_features_list.append(ref_image_features)
     ref_img_features = torch.cat(ref_img_features_list)
     ref_img_features_mean = ref_img_features.mean(dim=0)
+    print('ref_img_features.shape: ', ref_img_features.shape)
+    print('ref_img_features_mean.shape: ', ref_img_features_mean.shape)
 
     dataset = AttrDataSet(img_dir=img_dir, anno_file=anno_file, attrs=attrs, transform=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
