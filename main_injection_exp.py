@@ -92,7 +92,7 @@ if __name__ == '__main__':
     parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/ffhq/ffhq_50k', help='the directory of real images')
     parser.add_argument('--gen_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Injection_Experiment/bangs/100', help='the directory of generated images')  #/Users/yifanlu/Downloads/Imagenet256-BigGAN/530  # /Users/yifanlu/Downloads/Imagenet256-LDM/530  # /Users/yifanlu/Downloads/imagenet256-StyleGAN-XL/530
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
-    parser.add_argument('--score_type', type=str, default='EvalCS_local_vit', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
+    parser.add_argument('--score_type', type=str, default='EvalCS_local_rn', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to extract image features')
 
     args = parser.parse_args()
