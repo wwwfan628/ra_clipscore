@@ -218,6 +218,19 @@ def get_evalcs_local_rn(img_dir, text_list, batch_size=1000):
     return scores
 
 
+def get_evalcs_local_rn_single_image(img_path, text_list):
+    print(f"********** calculating EvalCS with local RN for single image **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = eval_clip.load("RN101", device=device)
+    model.eval()
+    image = preprocess(Image.open(img_path)).unsqueeze(0).to(device)
+    text = eval_clip.tokenize(text_list).to(device)
+
+    with torch.no_grad():
+        scores = model(image.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+    return scores
+
+
 def get_evalcs_local_vit_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating EvalCS with local ViT **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"

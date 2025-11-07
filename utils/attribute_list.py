@@ -1,5 +1,9 @@
 attr_dict = {}
 
+attr_dict['single_5'] = ["long hair", "short hair", "young", "elder", "makeup"]
+
+attr_dict['single_6'] = ["long hair", "short hair", "young", "elder", "makeup", "no makeup"]
+
 attr_dict['ablation_study_4'] = ["black hair", "eyeglasses", "male", "smiling"]
 
 attr_dict['compare_20'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", \
