@@ -129,7 +129,7 @@ if __name__ == '__main__':
     parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Img', help='directory for real images for HCS') # /home/x_yiflu/dataset/Datasets/CelebA/Img
     parser.add_argument('--img_path', default='./man.png', type=str)
     parser.add_argument('--save_path', default='./man_eval_results_0.pdf', type=str)
-    parser.add_argument('--n_attr', type=int, default=6, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--n_attr', type=int, default=5, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
 
     args = parser.parse_args()
