@@ -1,6 +1,6 @@
 attr_dict = {}
 
-attr_dict['single_5'] = ["long hair", "short hair", "young", "makeup", "no makeup"]
+attr_dict['single_5'] = ["long hair", "short hair", "young", "elder", "no makeup"]
 
 attr_dict['single_6'] = ["long hair", "short hair", "young", "elder", "makeup", "no makeup"]
 
