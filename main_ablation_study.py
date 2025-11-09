@@ -30,13 +30,15 @@ def _kde_pdf(scores_positive, scores_negative, bins=512):
 
 
 def separation_scores(scores_positive, scores_negative, bins=512):
-    # Wasserstein
-    w_dist = wasserstein_distance(scores_positive, scores_negative)
-
     # Cohen's d
     mu1, mu2 = np.mean(scores_positive), np.mean(scores_negative)
     s1, s2 = np.std(scores_positive, ddof=1), np.std(scores_negative, ddof=1)
-    cohen_d = abs(mu1 - mu2) / np.sqrt((s1**2 + s2**2) / 2)
+    cohen_d = abs(mu1 - mu2) / np.sqrt((s1 ** 2 + s2 ** 2) / 2)
+    print('numerator: ', abs(mu1 - mu2))
+    print('denominator: ', np.sqrt((s1 ** 2 + s2 ** 2) / 2))
+
+    # Wasserstein
+    w_dist = wasserstein_distance(scores_positive, scores_negative)
 
     # KDE + Bhattacharyya & Hellinger
     xs, p, q = _kde_pdf(scores_positive, scores_negative, bins=bins)
@@ -53,7 +55,6 @@ def separation_scores(scores_positive, scores_negative, bins=512):
         cohen_d=cohen_d,
         bhattacharyya=bhattacharyya,
         hellinger=hellinger,
-        overlap=overlap,
         separation_1_minus_ovl=separation_1_minus_ovl
     )
 
