@@ -40,9 +40,14 @@ def separation_scores(scores_positive, scores_negative, bins=512):
     print(np.isfinite(scores_positive).all())
     print(scores_positive)
     print(scores_positive.min(), scores_positive.max())
+    print(np.max(np.abs(scores_positive)))
+    print(np.mean(np.abs(scores_positive)))
+    print("XXXXXXXXXXXXXXXXXXXXXXXXX")
     print(np.isfinite(scores_negative).all())
     print(scores_negative)
     print(scores_negative.min(), scores_negative.max())
+    print(np.max(np.abs(scores_negative)))
+    print(np.mean(np.abs(scores_negative)))
 
 
     # Wasserstein
