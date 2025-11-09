@@ -90,6 +90,12 @@ def main(args):
         scores_negative = scores[labels[:, i]==-1][:, i]
         scores_furniture = scores[labels[:, i] == 0][:, i]
 
+        # compute separation:
+        separation = separation_scores(scores_positive, scores_negative)
+        for k, v in separation.items():
+            print(f"########## {args.score_type}-{attr}  ##########")
+            print(f"{k}: {v}\n")
+
         # plot and save figures
         fig1, ax1 = plt.subplots()
 
@@ -111,10 +117,7 @@ def main(args):
         result_save_path = f"{save_dir}/{attr}_{args.score_type}_{args.mode}.png"
         fig1.savefig(result_save_path)
 
-        # compute separation:
-        separation = separation_scores(scores_positive, scores_negative)
-        for k,v in separation.items():
-            print(f"{attr} {args.score_type} {k}: {v}\n")
+
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f'Excution Time: {elapsed}!')
