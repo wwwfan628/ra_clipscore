@@ -19,17 +19,13 @@ def plot_scores(hcs, racs, text_list, save_path):
 
     # --- Figure setup: small square ---
     fig, ax = plt.subplots(figsize=(3.0, 3.0), dpi=300)
-    ax2 = ax.twinx()  # second y-axis for RA-CLIPScore
+    ax2 = ax.twinx()  # secondary y-axis for RA-CLIPScore
 
     # Convert to numpy if torch tensors
     hcs = hcs.cpu().numpy()
     racs = racs.cpu().numpy().squeeze()
 
-    # --- Compute limits ---
-    ymin_hcs, ymax_hcs = np.min(hcs), np.max(hcs)
-    ymin_racs, ymax_racs = np.min(racs), np.max(racs)
-
-    # --- Elegant, color-blind-safe colors ---
+    # --- Colors (color-blind safe) ---
     color_hcs = "#2878B5"   # deep teal–blue
     color_racs = "#E76F51"  # warm orange–red
 
@@ -39,13 +35,9 @@ def plot_scores(hcs, racs, text_list, save_path):
     ax2.bar(x + bar_w/2, racs, width=bar_w, color=color_racs,
             edgecolor="none", label="RA-CLIPScore", zorder=2)
 
-    # --- Center both y-axes around 0 ---
-    abs_max_hcs = max(abs(ymin_hcs), abs(ymax_hcs))
-    abs_max_hcs *= 1.05
-    abs_max_racs = max(abs(ymin_racs), abs(ymax_racs))
-    abs_max_racs *= 1.05
-    ax.set_ylim(-abs_max_hcs, abs_max_hcs)
-    ax2.set_ylim(-abs_max_racs, abs_max_racs)
+    # --- Fixed y-axis limits ---
+    ax.set_ylim(-5, 12)
+    ax2.set_ylim(-0.5, 1.2)
 
     # --- Axis labels ---
     ax.set_ylabel("HCS", labelpad=2)
@@ -56,7 +48,7 @@ def plot_scores(hcs, racs, text_list, save_path):
     ax.set_xticks(x)
     ax.set_xticklabels(text_list, rotation=45, ha="right")
 
-    # --- Grid and 0 line ---
+    # --- Grid and 0-line ---
     ax.axhline(0, color="gray", linewidth=0.5, linestyle="--", zorder=1)
     ax.grid(axis="y", linestyle="--", linewidth=0.4, alpha=0.6)
 
@@ -68,7 +60,7 @@ def plot_scores(hcs, racs, text_list, save_path):
     ax2.spines["right"].set_linewidth(0.7)
     ax2.spines["top"].set_visible(False)
 
-    # --- Font & layout for compact figure ---
+    # --- Fonts & layout for compact figure ---
     plt.rcParams.update({
         "font.size": 8,
         "axes.labelsize": 8,
@@ -90,13 +82,14 @@ def plot_scores(hcs, racs, text_list, save_path):
         spine.set_linewidth(0.8)
         spine.set_color("black")
 
-    # Make sure twin axis (ax2) doesn’t hide the border
+    # Ensure twin axis doesn’t hide the frame
     ax2.spines["top"].set_visible(False)
     ax2.spines["right"].set_visible(False)
 
     plt.tight_layout(pad=0.1)
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.show()
+
 
 
 
@@ -132,8 +125,8 @@ if __name__ == '__main__':
     parser.add_argument('--exp', type=str, default='single', help='experiment name')
     parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Img', help='directory for real images for HCS') # /home/x_yiflu/dataset/Datasets/CelebA/Img  /Users/yifanlu/Downloads/train_34
     parser.add_argument('--img_path', default='./man.png', type=str)
-    parser.add_argument('--save_path', default='./man_eval_results_5.pdf', type=str)
-    parser.add_argument('--n_attr', type=int, default=5, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--save_path', default='./man_eval_results.pdf', type=str)
+    parser.add_argument('--n_attr', type=int, default=6, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
 
     args = parser.parse_args()
