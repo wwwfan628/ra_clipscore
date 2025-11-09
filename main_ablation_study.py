@@ -12,6 +12,51 @@ import time
 from scipy.stats import gaussian_kde
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score
+from scipy.stats import wasserstein_distance, gaussian_kde
+
+
+def _kde_pdf(scores_positive, scores_negative, bins=512):
+    kde1 = gaussian_kde(scores_positive)
+    kde2 = gaussian_kde(scores_negative)
+    lo = min(scores_positive.min(), scores_negative.min())
+    hi = max(scores_positive.max(), scores_negative.max())
+    xs = np.linspace(lo, hi, bins)
+    p = kde1(xs)
+    q = kde2(xs)
+
+    p /= np.trapz(p, xs)
+    q /= np.trapz(q, xs)
+    return xs, p, q
+
+
+def separation_scores(scores_positive, scores_negative, bins=512):
+    # Wasserstein
+    w_dist = wasserstein_distance(scores_positive, scores_negative)
+
+    # Cohen's d
+    mu1, mu2 = np.mean(scores_positive), np.mean(scores_negative)
+    s1, s2 = np.std(scores_positive, ddof=1), np.std(scores_negative, ddof=1)
+    cohen_d = abs(mu1 - mu2) / np.sqrt((s1**2 + s2**2) / 2)
+
+    # KDE + Bhattacharyya & Hellinger
+    xs, p, q = _kde_pdf(scores_positive, scores_negative, bins=bins)
+    bc = np.trapz(np.sqrt(p * q), xs)              # Bhattacharyya coefficient in [0,1]
+    bhattacharyya = -np.log(max(bc, 1e-15))        # distance
+    hellinger = np.sqrt(max(0.0, 1.0 - bc))        # Hellinger distance in [0,1]
+
+    # Overlap
+    overlap = np.trapz(np.minimum(p, q), xs)       # Overlap area OVL in [0,1]
+    separation_1_minus_ovl = 1.0 - overlap
+
+    return dict(
+        wasserstein=w_dist,
+        cohen_d=cohen_d,
+        bhattacharyya=bhattacharyya,
+        hellinger=hellinger,
+        overlap=overlap,
+        separation_1_minus_ovl=separation_1_minus_ovl
+    )
+
 
 
 def main(args):
@@ -63,11 +108,17 @@ def main(args):
         ax1.legend()
         ax1.grid(True)
 
-        result_save_path = f"{save_dir}/{attr}_{args.score_type}.png"
+        result_save_path = f"{save_dir}/{attr}_{args.score_type}_{args.mode}.png"
         fig1.savefig(result_save_path)
+
+        # compute separation:
+        separation = separation_scores(scores_positive, scores_negative)
+        for k,v in separation.items():
+            print(f"{attr} {args.score_type} {k}: {v}\n")
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f'Excution Time: {elapsed}!')
+
 
 
 if __name__ == '__main__':
@@ -77,7 +128,7 @@ if __name__ == '__main__':
     parser.add_argument('--ref_img_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img', help='celeba 50k')  # /home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img  /Users/yifanlu/Downloads/face50k_furniture15k/Img
     parser.add_argument('--anno_file', type=str, default='/home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt', help='celeba50k_furniture15k annotation file path')  # /home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt  /Users/yifanlu/Downloads/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt
     parser.add_argument('--n_attr', type=int, default=4, help='number of attributes to calculate SaD and PaD')
-    parser.add_argument('--score_type', type=str, default='EvalCS_local_vit', help='score type, e.g. hcs, clip_score, EvalCS_local_vit, EvalCS_local_rn')
+    parser.add_argument('--score_type', type=str, default='EvalCS_local_rn', help='score type, e.g. hcs, clip_score, EvalCS_local_vit, EvalCS_local_rn')
     parser.add_argument('--mode', type=str, default='full', help='choose from: full, without_dual_prompts, without_local_features, without_global_embeddings')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to extract image features')
 
