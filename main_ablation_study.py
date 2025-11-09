@@ -93,7 +93,7 @@ def main(args):
 
         # compute separation:
         separation = separation_scores(scores_positive, scores_negative)
-        print(f"########## {args.score_type}-{attr}  ##########")
+        print(f"########## {args.score_type}--{args.mode}--{attr}  ##########")
         for k, v in separation.items():
             print(f"{k}: {v}\n")
 
