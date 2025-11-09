@@ -36,8 +36,8 @@ def plot_scores(hcs, racs, text_list, save_path):
             edgecolor="none", label="RA-CLIPScore", zorder=2)
 
     # --- Fixed y-axis limits ---
-    ax.set_ylim(-5, 12)
-    ax2.set_ylim(-0.5, 1.2)
+    ax.set_ylim(-5, 14)
+    ax2.set_ylim(-0.5, 1.4)
 
     # --- Axis labels ---
     ax.set_ylabel("HCS", labelpad=2)
