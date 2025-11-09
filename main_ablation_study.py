@@ -37,6 +37,10 @@ def separation_scores(scores_positive, scores_negative, bins=512):
     print('numerator: ', abs(mu1 - mu2))
     print('denominator: ', np.sqrt((s1 ** 2 + s2 ** 2) / 2))
     print('s1, s2: ', s1, s2)
+    print(np.isfinite(scores_positive).all())
+    print(scores_positive.min(), scores_positive.max())
+    print(np.isfinite(scores_negative).all())
+    print(scores_negative.min(), scores_negative.max())
 
 
     # Wasserstein
@@ -87,6 +91,8 @@ def main(args):
         scores, labels = core.get_cs_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'hcs':
         scores, labels = core.get_hcs_with_labels(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+
+    print('scores: ', scores)
 
     for i, attr in enumerate(attrs):
         scores_positive = scores[labels[:, i]==1][:, i]
