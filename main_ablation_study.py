@@ -100,7 +100,7 @@ def main(args):
     elif args.score_type == 'hcs':
         scores, labels = core.get_hcs_with_labels(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
 
-    print('!!!!!!!!!!!!!! scores: ', scores)
+    scores = scores.astype(np.float64)
 
     for i, attr in enumerate(attrs):
         scores_positive = scores[labels[:, i]==1][:, i]
