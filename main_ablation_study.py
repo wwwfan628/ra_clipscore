@@ -93,8 +93,8 @@ def main(args):
 
         # compute separation:
         separation = separation_scores(scores_positive, scores_negative)
+        print(f"########## {args.score_type}-{attr}  ##########")
         for k, v in separation.items():
-            print(f"########## {args.score_type}-{attr}  ##########")
             print(f"{k}: {v}\n")
 
         # plot and save figures
