@@ -36,6 +36,8 @@ def separation_scores(scores_positive, scores_negative, bins=512):
     cohen_d = abs(mu1 - mu2) / np.sqrt((s1 ** 2 + s2 ** 2) / 2)
     print('numerator: ', abs(mu1 - mu2))
     print('denominator: ', np.sqrt((s1 ** 2 + s2 ** 2) / 2))
+    print('s1, s2: ', s1, s2)
+
 
     # Wasserstein
     w_dist = wasserstein_distance(scores_positive, scores_negative)
