@@ -38,8 +38,10 @@ def separation_scores(scores_positive, scores_negative, bins=512):
     print('denominator: ', np.sqrt((s1 ** 2 + s2 ** 2) / 2))
     print('s1, s2: ', s1, s2)
     print(np.isfinite(scores_positive).all())
+    print(scores_positive)
     print(scores_positive.min(), scores_positive.max())
     print(np.isfinite(scores_negative).all())
+    print(scores_negative)
     print(scores_negative.min(), scores_negative.max())
 
 
