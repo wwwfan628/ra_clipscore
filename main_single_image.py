@@ -198,13 +198,14 @@ def main(args):
     hcs_results = {}
     racs_results = {}
     results = {}
+
+    img_mean_real = core.get_img_mean(img_dir=args.real_dir, batch_size=1024)
     for exp_name, text_list in text_lists.items():
         text_list_prompt_dual = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
         text_list_prompt_single = [f"This is a photo of {item}." for item in text_list]
 
         # calculate scores
         racs = core.get_evalcs_local_rn_single_image(img_path=args.img_path, text_list=text_list_prompt_dual)
-        img_mean_real = core.get_img_mean(img_dir=args.real_dir, batch_size=1024)
         text_mean = core.get_text_mean(text_list=text_list_prompt_dual)
         hcs = core.get_hcs_for_one_img(img=args.img_path, img_mean=img_mean_real, text_mean=text_mean, text_list=text_list_prompt_single)
 
