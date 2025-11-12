@@ -225,7 +225,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='single', help='experiment name')
-    parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Downloads/train_34', help='directory for real images for HCS') # /home/x_yiflu/dataset/Datasets/CelebA/Img  /Users/yifanlu/Downloads/train_34
+    parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/CelebA/Img', help='directory for real images for HCS') # /home/x_yiflu/dataset/Datasets/CelebA/Img  /Users/yifanlu/Downloads/train_34
     parser.add_argument('--img_path', default='./man.png', type=str)
     parser.add_argument('--save_path', default='./man_eval_results.pdf', type=str)
     parser.add_argument('--n_attr', type=int, default=5, help='number of attributes to calculate SaD and PaD')
