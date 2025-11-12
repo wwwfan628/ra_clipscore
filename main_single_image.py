@@ -115,7 +115,7 @@ def plot_two_histograms_over_three_sets(
     ax_h.set_xticklabels(master_attrs, rotation=35, ha="right")
     ax_h.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax_h.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax_h.legend(frameon=False, loc="upper left", ncol=3)
+    ax_h.legend(frameon=False, loc="lower left", ncol=3)
     for s in ["top", "right"]:
         ax_h.spines[s].set_visible(False)
     fig_h.tight_layout(pad=0.2)
@@ -133,7 +133,7 @@ def plot_two_histograms_over_three_sets(
     ax_r.set_xticklabels(master_attrs, rotation=35, ha="right")
     ax_r.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax_r.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax_r.legend(frameon=False, loc="upper left", ncol=3)
+    ax_r.legend(frameon=False, loc="lower left", ncol=3)
     for s in ["top", "right"]:
         ax_r.spines[s].set_visible(False)
     fig_r.tight_layout(pad=0.2)
