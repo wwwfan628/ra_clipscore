@@ -64,34 +64,33 @@ def plot_two_histograms_over_three_sets(
     # --- Experiment names ---
     exp_labels = ["All Attr.", "w/o long hair", "w/o elder"]
 
-    # --- Layout (CVPR column size) ---
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(3.4, 4.4), dpi=300, sharex=True)
 
-    # --- Top: HCS ---
+    # --- HCS (blue, top) ---
     for i in range(3):
         ax1.bar(x + offsets[i], H[i], width=bar_w, color=blue_shades[i],
                 edgecolor="none", label=exp_labels[i], zorder=2)
     ax1.set_ylabel("HCS")
     ax1.set_ylim(-5, 14)
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(master_attrs, rotation=35, ha="right")  # ticks also on top
     ax1.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax1.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax1.legend(frameon=False, loc="lower left", ncol=3,
+    ax1.legend(frameon=False, loc="upper left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
-    # --- Bottom: RA-CLIPScore ---
+    # --- RA-CLIPScore (orange, bottom) ---
     for i in range(3):
         ax2.bar(x + offsets[i], R[i], width=bar_w, color=orange_shades[i],
                 edgecolor="none", label=exp_labels[i], zorder=2)
     ax2.set_ylabel("RA-CLIPScore")
     ax2.set_ylim(-0.5, 1.4)
-    ax2.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
-    ax2.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax2.legend(frameon=False, loc="lower left", ncol=3,
-               handlelength=1.2, columnspacing=0.8)
-
-    # --- X-axis ---
     ax2.set_xticks(x)
     ax2.set_xticklabels(master_attrs, rotation=35, ha="right")
+    ax2.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
+    ax2.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
+    ax2.legend(frameon=False, loc="upper left", ncol=3,
+               handlelength=1.2, columnspacing=0.8)
 
     # --- Styling ---
     for ax in (ax1, ax2):
@@ -100,9 +99,47 @@ def plot_two_histograms_over_three_sets(
         ax.spines["left"].set_linewidth(0.8)
         ax.spines["bottom"].set_linewidth(0.8)
 
+    # --- Save combined figure ---
     plt.tight_layout(pad=0.25)
     fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.03)
     fig.savefig(save_path.replace(".pdf", ".png"), dpi=300, bbox_inches="tight")
+
+    # HCS only
+    fig_h, ax_h = plt.subplots(figsize=(3.4, 2.2), dpi=300)
+    for i in range(3):
+        ax_h.bar(x + offsets[i], H[i], width=bar_w, color=blue_shades[i],
+                 edgecolor="none", label=exp_labels[i], zorder=2)
+    ax_h.set_ylabel("HCS")
+    ax_h.set_ylim(-5, 14)
+    ax_h.set_xticks(x)
+    ax_h.set_xticklabels(master_attrs, rotation=35, ha="right")
+    ax_h.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
+    ax_h.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
+    ax_h.legend(frameon=False, loc="upper left", ncol=3)
+    for s in ["top", "right"]:
+        ax_h.spines[s].set_visible(False)
+    fig_h.tight_layout(pad=0.2)
+    fig_h.savefig(save_path.replace(".pdf", "_HCS.pdf"), dpi=300, bbox_inches="tight")
+    fig_h.savefig(save_path.replace(".pdf", "_HCS.png"), dpi=300, bbox_inches="tight")
+
+    # RA-CLIPScore only
+    fig_r, ax_r = plt.subplots(figsize=(3.4, 2.2), dpi=300)
+    for i in range(3):
+        ax_r.bar(x + offsets[i], R[i], width=bar_w, color=orange_shades[i],
+                 edgecolor="none", label=exp_labels[i], zorder=2)
+    ax_r.set_ylabel("RA-CLIPScore")
+    ax_r.set_ylim(-0.5, 1.4)
+    ax_r.set_xticks(x)
+    ax_r.set_xticklabels(master_attrs, rotation=35, ha="right")
+    ax_r.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
+    ax_r.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
+    ax_r.legend(frameon=False, loc="upper left", ncol=3)
+    for s in ["top", "right"]:
+        ax_r.spines[s].set_visible(False)
+    fig_r.tight_layout(pad=0.2)
+    fig_r.savefig(save_path.replace(".pdf", "_RACS.pdf"), dpi=300, bbox_inches="tight")
+    fig_r.savefig(save_path.replace(".pdf", "_RACS.png"), dpi=300, bbox_inches="tight")
+
     plt.show()
 
 
