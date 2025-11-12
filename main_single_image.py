@@ -76,7 +76,7 @@ def plot_two_histograms_over_three_sets(
     ax1.set_xticklabels(master_attrs, rotation=35, ha="right")  # ticks also on top
     ax1.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax1.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax1.legend(frameon=False, loc="upper left", ncol=3,
+    ax1.legend(frameon=False, loc="lower left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
     # --- RA-CLIPScore (orange, bottom) ---
@@ -89,7 +89,7 @@ def plot_two_histograms_over_three_sets(
     ax2.set_xticklabels(master_attrs, rotation=35, ha="right")
     ax2.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax2.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax2.legend(frameon=False, loc="upper left", ncol=3,
+    ax2.legend(frameon=False, loc="lower left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
     # --- Styling ---
