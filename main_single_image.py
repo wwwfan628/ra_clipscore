@@ -45,10 +45,11 @@ def plot_two_histograms_over_three_sets(
     Two subplots:
         - Top: HCS (blue)
         - Bottom: RA-CLIPScore (orange)
-    Each shows three experiments aligned to the master attribute list.
+    Each shows three experiments aligned by master attribute list.
     Missing attributes are filled with 0.
     """
-    # --- Align data ---
+
+    # --- Align data (fill missing with zeros) ---
     H = [pad_to_master(master_attrs, per_exp_attrs[i], hcs_vals[i]) for i in range(3)]
     R = [pad_to_master(master_attrs, per_exp_attrs[i], racs_vals[i]) for i in range(3)]
 
@@ -56,17 +57,20 @@ def plot_two_histograms_over_three_sets(
     bar_w = 0.22
     offsets = [-bar_w, 0.0, bar_w]
 
-    # --- Colors per experiment ---
+    # --- Colors ---
     blue_shades   = ["#1B6CA8", "#2878B5", "#6AA2D8"]  # HCS
     orange_shades = ["#C75336", "#E76F51", "#F29C7E"]  # RA-CLIPScore
 
-    # --- Layout ---
+    # --- Experiment names ---
+    exp_labels = ["All Attr.", "w/o long hair", "w/o elder"]
+
+    # --- Layout (CVPR column size) ---
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(3.4, 4.4), dpi=300, sharex=True)
 
     # --- Top: HCS ---
     for i in range(3):
         ax1.bar(x + offsets[i], H[i], width=bar_w, color=blue_shades[i],
-                edgecolor="none", label=f"Exp{i+1}", zorder=2)
+                edgecolor="none", label=exp_labels[i], zorder=2)
     ax1.set_ylabel("HCS")
     ax1.set_ylim(-5, 14)
     ax1.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
@@ -77,7 +81,7 @@ def plot_two_histograms_over_three_sets(
     # --- Bottom: RA-CLIPScore ---
     for i in range(3):
         ax2.bar(x + offsets[i], R[i], width=bar_w, color=orange_shades[i],
-                edgecolor="none", label=f"Exp{i+1}", zorder=2)
+                edgecolor="none", label=exp_labels[i], zorder=2)
     ax2.set_ylabel("RA-CLIPScore")
     ax2.set_ylim(-0.5, 1.4)
     ax2.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
@@ -85,7 +89,7 @@ def plot_two_histograms_over_three_sets(
     ax2.legend(frameon=False, loc="upper left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
-    # --- Shared x-axis ---
+    # --- X-axis ---
     ax2.set_xticks(x)
     ax2.set_xticklabels(master_attrs, rotation=35, ha="right")
 
@@ -96,7 +100,6 @@ def plot_two_histograms_over_three_sets(
         ax.spines["left"].set_linewidth(0.8)
         ax.spines["bottom"].set_linewidth(0.8)
 
-    # --- Save and show ---
     plt.tight_layout(pad=0.25)
     fig.savefig(save_path, dpi=300, bbox_inches="tight", pad_inches=0.03)
     fig.savefig(save_path.replace(".pdf", ".png"), dpi=300, bbox_inches="tight")
