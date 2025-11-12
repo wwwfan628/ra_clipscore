@@ -75,7 +75,7 @@ def plot_two_histograms_over_three_sets(
     ax1.set_ylim(-5, 14)
     ax1.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax1.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax1.legend(frameon=False, loc="upper left", ncol=3,
+    ax1.legend(frameon=False, loc="lower left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
     # --- Bottom: RA-CLIPScore ---
@@ -86,7 +86,7 @@ def plot_two_histograms_over_three_sets(
     ax2.set_ylim(-0.5, 1.4)
     ax2.axhline(0, color="gray", lw=0.6, ls="--", zorder=1)
     ax2.grid(axis="y", ls="--", lw=0.4, alpha=0.6, zorder=0)
-    ax2.legend(frameon=False, loc="upper left", ncol=3,
+    ax2.legend(frameon=False, loc="lower left", ncol=3,
                handlelength=1.2, columnspacing=0.8)
 
     # --- X-axis ---
