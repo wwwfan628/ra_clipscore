@@ -59,6 +59,24 @@ def separation_scores(scores_positive, scores_negative, bins=512):
 
 
 def main(args):
+    # =====================
+    #  CVPR Figure Defaults
+    # =====================
+    plt.rcParams.update({
+        "pdf.fonttype": 42,  # TrueType for PDF
+        "ps.fonttype": 42,
+        "axes.linewidth": 0.8,
+        "xtick.major.width": 0.6,
+        "ytick.major.width": 0.6,
+        "xtick.major.size": 4,
+        "ytick.major.size": 4,
+        "font.size": 8,
+        "axes.labelsize": 8,
+        "xtick.labelsize": 7,
+        "ytick.labelsize": 7,
+        "legend.fontsize": 7,
+    })
+
     start_time = time.time()
 
     text_list = utils.load_candidate(experiment_name=f"{args.exp}_{args.n_attr}", n_attr=args.n_attr)
@@ -98,25 +116,36 @@ def main(args):
             print(f"{k}: {v}\n")
 
         # plot and save figures
-        fig1, ax1 = plt.subplots()
+        fig = plt.figure(figsize=(2.2, 1.7))  # CVPR small ratio
 
         for x, label, color in zip(
-                [scores_negative, scores_positive, scores_furniture],
-                [f'w/o {text_list[i]}', f'w/ {text_list[i]}', 'furniture'],
+                [scores_negative, scores_positive],
+                [f'w/o {text_list[i]}', f'w/ {text_list[i]}'],
                 ['tab:red', 'tab:green', 'tab:blue']
         ):
             kde = gaussian_kde(x)
             x_range = np.linspace(min(x) - 0.1, max(x) + 0.1, 500)
-            ax1.plot(x_range, kde(x_range), label=label, color=color)
 
-        ax1.set_title(f'Distribution of {args.score_type}')
-        ax1.set_xlabel('x')
-        ax1.set_ylabel('Density')
-        ax1.legend()
-        ax1.grid(True)
+            # =====================
+            #    Plot
+            # =====================
+
+
+            plt.plot(x_range, kde(x_range), lw=1, label=label)
+
+        plt.xlabel(f"EvalCS_{attr}")
+        plt.ylabel("Density")
+
+        # Light thin grid
+        plt.grid(True, linestyle='--', linewidth=0.3, alpha=0.4)
+
+        # Legend outside top-left
+        plt.legend(frameon=True, framealpha=0.9, loc='upper left')
+
+        plt.tight_layout(pad=0.5)
 
         result_save_path = f"{save_dir}/{attr}_{args.score_type}_{args.mode}.png"
-        fig1.savefig(result_save_path)
+        fig.savefig(result_save_path)
 
 
 
