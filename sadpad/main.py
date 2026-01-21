@@ -1,6 +1,6 @@
 import argparse 
 import core
-import sadpad.utils as utils
+import utils
 import os
 import time
 from tqdm import tqdm
