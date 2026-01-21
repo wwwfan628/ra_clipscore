@@ -29,7 +29,7 @@ def main(args):
     # save results
     dataset_real = os.path.basename(args.real_dir)
     dataset_gen = os.path.basename(args.gen_dir)
-    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}_makeup"
+    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}_datasetcompare"
     save_dir = f"results_dir/{experiment_name}/{dataset_real}_vs_{dataset_gen}/"
     os.makedirs(save_dir, exist_ok=True)
     results_save_path = f"{save_dir}/experiment_results_dict.pkl"
@@ -52,8 +52,8 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='ffhq', help='experiment type, e.g. FFHQ or AFHQ')
-    parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/ffhq/ffhq_50k')
-    parser.add_argument('--gen_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Injection_Experiment/makeup/100')
+    parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Dataset_Compare/A')
+    parser.add_argument('--gen_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Dataset_Compare/B')
     parser.add_argument('--n_attr', type=int, default=20, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--n_point', type=int, default=10000, help='number of points to calculate KLD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
