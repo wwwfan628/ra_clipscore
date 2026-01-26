@@ -59,7 +59,7 @@ def main(
     # create base dataset coco50k
     out_dir = Path(out_dir_root)
     base_img_dir = out_dir / f"coco_{base_size}"
-    base_img_dir.mkdir(exist_ok=True)
+    base_img_dir.mkdir(parents=True, exist_ok=True)
 
     base_imgs = coco.loadImgs(base_ids_list)
     for info in base_imgs:
@@ -73,7 +73,7 @@ def main(
         # Injection datasets
         if target_class is None:
             inj_img_dir = out_dir / "original"
-            inj_img_dir.mkdir(exist_ok=True)
+            inj_img_dir.mkdir(parents=True, exist_ok=True)
             # Random injection, no class constraint
             candidates = sorted(set(all_img_ids) - base_ids)
             if inject_sizes[-1] > len(candidates):
@@ -89,7 +89,7 @@ def main(
         else:
             # Class-based injection
             inj_img_dir = out_dir / f"{target_class}"
-            inj_img_dir.mkdir(exist_ok=True)
+            inj_img_dir.mkdir(parents=True, exist_ok=True)
             cat_ids = coco.getCatIds(catNms=[target_class])
             if not cat_ids:
                 raise ValueError(f"Category '{target_class}' not found")
@@ -112,7 +112,7 @@ def main(
 
         for inject_ids, inject_name in zip(inject_ids_list, inject_name_list):
             inject_dir = inj_img_dir / inject_name
-            inject_dir.mkdir(exist_ok=True)
+            inject_dir.mkdir(parents=True, exist_ok=True)
             base_imgs = coco.loadImgs(base_ids_list)
             for info in base_imgs:
                 src = Path(images_dir) / info["file_name"]
