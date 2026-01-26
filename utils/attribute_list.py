@@ -16,6 +16,9 @@ attr_dict['injection_20'] = ["man", "woman", "child", "arched eyebrows", "smilin
                              "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", \
                              "wearing earrings","beard","double chin", "young"]
 
+attr_dict['injection_coco_10'] = ["kite", "toaster", "zebra", "chair", "microwave", "skateboard", "clock",
+                                  "umbrella", "broccoli", "bear"]
+
 
 attr_dict['imagenet_1_USER'] = [
     'basketball'
