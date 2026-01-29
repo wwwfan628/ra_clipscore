@@ -28,6 +28,21 @@ attr_dict['coco_1_USER'] = [
     'airplane'
 ]
 
+
+# attr_dict['coco_4_USER'] = [
+#     'background',
+#     'zebra',
+#     'grass',
+#     'sky'
+# ]
+
+attr_dict['coco_4_USER'] = [
+    'background',
+    'pizza',
+    'table',
+    'plate'
+]
+
 attr_dict['coco_6_USER'] = [
     'airplane',
     'dining table',

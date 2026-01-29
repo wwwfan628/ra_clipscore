@@ -254,9 +254,9 @@ def plot_mask_overlay(
 def main(args):
     start_time = time.time()
 
-    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}_{args.score_type}"
+    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}"
 
-    text_list, stats = utils.load_candidate(experiment_name=experiment_name, n_attr=args.n_attr, attr_type=args.attr_type)
+    text_list = utils.load_candidate(experiment_name=experiment_name, n_attr=args.n_attr)
 
     # dual prompts
     # text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
@@ -288,7 +288,7 @@ def main(args):
     with torch.no_grad():
         h, w = model.visual.input_resolution, model.visual.input_resolution
         if args.backbone == 'ViT-B/16':
-            image_features, attn_weight_list = model.encode_image(image, h, w, attn_mask=1)   # image [1, 3, 224, 224] image features [1, 197, 512], attn_weight [1, 197, 197]
+            image_features, attn_weight_list = model.encode_image(image, attn_mask=1)   # image [1, 3, 224, 224] image features [1, 197, 512], attn_weight [1, 197, 197]
             attn_weight = torch.stack(attn_weight_list[:-1], dim=0).mean(dim=0)
         elif 'RN' in args.backbone:
             image_features, attn_weight = model.encode_image(image)    # image [1, 3, 224, 224] image features [1, 1024, 50], attn_weight [1, 50, 50]
@@ -354,8 +354,8 @@ def main(args):
 
     mask, kept_ids, _ = logits_to_mask_keep_topk(
         logits_per_patch.squeeze(), h, w, grid=grid,
-        keep_k=50, background_id=0,
-        select_mode="sum", small_obj_tau=0.7,
+        keep_k=3, background_id=0,
+        select_mode="mean", small_obj_tau=0.7,
         reassign_to_kept=False  # set True to fallback to kept classes
     )
 
@@ -366,8 +366,8 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='coco', help='experiment type, e.g. celebA, FFHQ or AFHQ')
-    parser.add_argument('--img_pth', type=str, default='/Users/yifanlu/Desktop/Datasets/coco2014/val2014/COCO_val2014_000000572055.jpg')
-    parser.add_argument('--n_attr', type=int, default=2, help='number of attributes to calculate SaD and PaD')
+    parser.add_argument('--img_pth', type=str, default='/Users/yifanlu/Desktop/val2014/COCO_val2014_000000004979.jpg')
+    parser.add_argument('--n_attr', type=int, default=4, help='number of attributes to calculate SaD and PaD')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
     parser.add_argument('--score_type', type=str, default='EvalCS', help='score type, e.g. CS, HCS, dualCS, scaledHCS or simplifiedHCS')
     parser.add_argument('--backbone', type=str, default='ViT-B/16', help='backbone for CLIP, e.g. ViT-B/16 or RN50, RN101')
