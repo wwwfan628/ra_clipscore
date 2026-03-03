@@ -145,7 +145,7 @@ def main(args):
         plt.tight_layout(pad=0.5)
 
         result_save_path = f"{save_dir}/{attr}_{args.score_type}_{args.mode}.png"
-        fig.savefig(result_save_path)
+        fig.savefig(result_save_path, dpi=600, bbox_inches="tight")
 
 
 
