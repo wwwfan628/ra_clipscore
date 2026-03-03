@@ -70,11 +70,11 @@ def main(args):
         "ytick.major.width": 0.6,
         "xtick.major.size": 4,
         "ytick.major.size": 4,
-        "font.size": 8,
-        "axes.labelsize": 8,
-        "xtick.labelsize": 7,
-        "ytick.labelsize": 7,
-        "legend.fontsize": 7,
+        "font.size": 9,
+        "axes.labelsize": 9,
+        "xtick.labelsize": 8,
+        "ytick.labelsize": 8,
+        "legend.fontsize": 8,
     })
 
     start_time = time.time()
@@ -116,7 +116,7 @@ def main(args):
             print(f"{k}: {v}\n")
 
         # plot and save figures
-        fig = plt.figure(figsize=(2.2, 1.7))  # CVPR small ratio
+        fig = plt.figure(figsize=(3.3, 2.6))  # CVPR small ratio
 
         for x, label, color in zip(
                 [scores_negative, scores_positive],
