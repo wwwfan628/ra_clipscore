@@ -60,17 +60,25 @@ def separation_scores(scores_positive, scores_negative, bins=512):
 
 def main(args):
     # =====================
-    #  CVPR Figure Defaults
+    #  0.25linewidth Figure Defaults
     # =====================
     plt.rcParams.update({
-        "pdf.fonttype": 42,  # TrueType for PDF
+        "pdf.fonttype": 42,
         "ps.fonttype": 42,
-        "font.size": 11,
-        "axes.labelsize": 11,
-        "xtick.labelsize": 10,
-        "ytick.labelsize": 10,
-        "legend.fontsize": 10,
+
+        # readable when scaled to 0.25 linewidth
+        "font.size": 12,
+        "axes.labelsize": 12,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 13,
+
+        # cleaner axes
         "axes.linewidth": 1.0,
+        "xtick.major.width": 0.8,
+        "ytick.major.width": 0.8,
+        "xtick.major.size": 3.5,
+        "ytick.major.size": 3.5,
     })
 
     start_time = time.time()
@@ -125,16 +133,23 @@ def main(args):
             # =====================
             #    Plot
             # =====================
-            plt.plot(x_range, kde(x_range), lw=2, label=label)
+            plt.plot(x_range, kde(x_range), lw=2.2, label=label)
 
         # plt.xlabel(f"EvalCS_{attr}")
         # plt.ylabel("Density")
 
         # Light thin grid
-        plt.grid(True, linestyle='--', linewidth=0.6, alpha=0.5)
+        plt.grid(True, linestyle='--', linewidth=0.5, alpha=0.35)
 
         # Legend outside top-left
-        plt.legend(loc='upper left')
+        plt.legend(
+            loc="upper left",
+            frameon=True,
+            facecolor="white",
+            framealpha=0.35,
+            edgecolor="none",
+            handlelength=1.5
+        )
 
         plt.tight_layout()
 
