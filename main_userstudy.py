@@ -52,7 +52,7 @@ def main(args):
     scores_mean_gen = scores_gen.mean(axis=0)
     scores_cov_real = np.cov(scores_real.T)  # phi^2 = EX² - x_mean², shape: n_attr*n_attr
     scores_cov_gen = np.cov(scores_gen.T)
-    print(scores_mean_real.shape, scores_mean_gen.shape, scores_cov_real.shape, scores_cov_gen.shape)
+    print(scores_mean_real, scores_mean_real.shape, scores_mean_gen, scores_mean_gen.shape, scores_cov_real, scores_cov_real.shape, scores_cov_gen, scores_cov_gen.shape)
 
     # calculate different distribution distances
     forward_KL = compute_KL_divergence_1d_gaussian_pdf(scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen)
