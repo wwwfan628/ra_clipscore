@@ -28,7 +28,7 @@ def get_img_mean(img_dir, batch_size, clip_backbone=CLIP_BACKBONE):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load(clip_backbone, device=device)
     model.eval()
-    #real_dataset = torchvision.datasets.DatasetFolder(root=f"{img_dir}", loader=custom_loader, transform=preprocess, extensions=) 
+    #real_dataset = torchvision.datasets.DatasetFolder(root=f"{img_dir}", loader=custom_loader, transform=preprocess, extensions=)
     real_dataset = CustomDataSet(main_dir=f"{img_dir}", transform=preprocess)
     
     real_dataloader = torch.utils.data.DataLoader(
@@ -76,6 +76,34 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000, clip_backb
                 text_feat_temp /= text_feat_temp.norm(dim=-1, keepdim=True)
                 sim = (100.0 * img_feat @ text_feat_temp.T)
                 similarity_per_attribute[index*batch_size:(index+1)*batch_size,i]=sim
+
+    return similarity_per_attribute
+
+
+
+
+def get_cs(img_dir, text_list, batch_size=1000, clip_backbone=CLIP_BACKBONE):
+    print(f"calculating ClipScore for {img_dir}")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load(clip_backbone, device=device)
+
+    dataset = CustomDataSet(main_dir=f"{img_dir}", transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=6)
+
+    text_list_prompt = [f"This is a photo of {a}." for a in text_list]
+    text = clip.tokenize(text_list_prompt).to(device)
+    attribute_num = len(text_list_prompt)
+
+    with torch.no_grad():
+        text_features = model.encode_text(text)
+        similarity_per_attribute = torch.zeros((len(dataloader.dataset), attribute_num), dtype=torch.float).to(device)
+
+        for index, (datas) in tqdm(enumerate(dataloader), total=len(dataloader)):
+            image_features = model.encode_image(datas.to(device))
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            text_features /= text_features.norm(dim=-1, keepdim=True)
+            sim = (100.0 * image_features @ text_features.T)
+            similarity_per_attribute[index * batch_size:(index + 1) * batch_size] = sim
 
     return similarity_per_attribute
 
