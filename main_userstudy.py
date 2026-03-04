@@ -53,12 +53,10 @@ def main(args):
     scores_mean_gen = scores_gen.mean(axis=0)
     scores_cov_real = np.asarray(np.cov(scores_real.T))  # phi^2 = EX² - x_mean², shape: n_attr*n_attr
     scores_cov_gen = np.asarray(np.cov(scores_gen.T))
-    #if scores_cov_real.ndim == 0:
-    #    scores_cov_real = scores_cov_real.reshape(1, 1)
-    #if scores_cov_gen.ndim == 0:
-    #    scores_cov_gen = scores_cov_gen.reshape(1, 1)
-    print(scores_mean_real, scores_mean_real.shape, scores_mean_gen, scores_mean_gen.shape, scores_cov_real, scores_cov_real.shape, scores_cov_gen, scores_cov_gen.shape)
-    print(scores_real, scores_gen)
+    if scores_cov_real.ndim == 0:
+       scores_cov_real = scores_cov_real.reshape(1, 1)
+    if scores_cov_gen.ndim == 0:
+       scores_cov_gen = scores_cov_gen.reshape(1, 1)
 
     # calculate different distribution distances
     forward_KL = compute_KL_divergence_1d_gaussian_pdf(scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen)
