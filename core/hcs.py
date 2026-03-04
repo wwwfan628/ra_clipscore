@@ -70,7 +70,7 @@ def get_hcs(img_dir, img_mean, text_mean, text_list, batch_size=1000, clip_backb
             img_feat = image_features - img_mean
             text_feat = text_features - text_mean
             img_feat /= img_feat.norm(dim=-1, keepdim=True)   
-             
+            print(img_feat.dtype, text_feat.dtype)
             for i in range(attribute_num): 
                 text_feat_temp = text_feat[i]
                 text_feat_temp /= text_feat_temp.norm(dim=-1, keepdim=True)
