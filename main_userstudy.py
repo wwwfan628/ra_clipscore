@@ -65,7 +65,7 @@ def main(args):
     f_dist = compute_frechet_distance(scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen)
 
     # save results
-    save_dir = f"results_dir/{args.exp}/{args.attr_index}_{args.attr}/{dataset_real}_vs_{dataset_gen}/"
+    save_dir = f"results_dir/{args.exp}/{args.score}/{args.attr_index}_{args.attr}/{dataset_real}_vs_{dataset_gen}/"
     os.makedirs(save_dir, exist_ok=True)
     results_save_path = f"{save_dir}/experiment_results_dict.pkl"
 
@@ -81,7 +81,7 @@ def main(args):
     with open(results_save_path, 'wb') as f:
         pickle.dump(results_dict, f)
 
-    print(f"forward_KL: {forward_KL}, reverse_KL: {reverse_KL}, mean_diff: {mean_diff}, f_dist: {f_dist}.")
+    print(f"{args.score}: forward_KL {forward_KL} | reverse_KL: {reverse_KL} | mean_diff: {mean_diff} | f_dist: {f_dist}.")
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f'Excution Time: {elapsed}!')
