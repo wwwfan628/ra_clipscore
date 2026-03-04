@@ -5,6 +5,24 @@ import os
 import time
 import pickle
 import numpy as np
+import scipy
+
+
+
+def compute_KL_divergence_1d_gaussian_pdf(p_mean, q_mean, p_var, q_var):
+    # KL(p,q) = log(phi_q/phi_p) + ((phi_p² + (mean_p - mean_q)²)/2phi_q²) - 0.5   p represents original, q generated
+    KL_div = np.log(np.sqrt(q_var) / np.sqrt(p_var)) + (
+            (p_var + np.square((p_mean - q_mean))) / (2 * q_var)) - 0.5
+    return float(KL_div)
+
+
+def compute_frechet_distance(real_mean, gen_mean, real_cov, gen_cov):
+    m = np.square(gen_mean - real_mean).sum()
+    s, _ = scipy.linalg.sqrtm(np.dot(gen_cov, real_cov), disp=False)  # pylint: disable=no-member
+    frechet_distance = np.real(m + np.trace(gen_cov + real_cov - s * 2))
+    return float(frechet_distance)
+
+
 
 def main(args):
     start_time = time.time()
@@ -20,11 +38,11 @@ def main(args):
     if args.score == 'hcs':
         text_mean = core.get_text_mean(text_list)
         img_mean = core.get_img_mean(img_dir=real_dir, batch_size=1000)
-        scores_real = core.get_hcs(real_dir, img_mean, text_mean, text_list, batch_size=1000)
-        scores_gen = core.get_hcs(gen_dir, img_mean, text_mean, text_list, batch_size=1000)
+        scores_real = core.get_hcs(real_dir, img_mean, text_mean, text_list, batch_size=1000).detach().cpu().numpy()
+        scores_gen = core.get_hcs(gen_dir, img_mean, text_mean, text_list, batch_size=1000).detach().cpu().numpy()
     elif args.score == 'clip_score':
-        scores_real = core.get_cs(real_dir, text_list, batch_size=1000)
-        scores_gen = core.get_hcs(gen_dir, text_list, batch_size=1000)
+        scores_real = core.get_cs(real_dir, text_list, batch_size=1000).detach().cpu().numpy()
+        scores_gen = core.get_hcs(gen_dir, text_list, batch_size=1000).detach().cpu().numpy()
     elif args.score == 'evalcs_local_rn':
         scores_real = core.get_evalcs_local_rn(real_dir, text_list, batch_size=1000)
         scores_gen = core.get_evalcs_local_rn(gen_dir, text_list, batch_size=1000)
@@ -36,7 +54,10 @@ def main(args):
     scores_cov_gen = np.cov(scores_gen.T)
 
     # calculate different distribution distances
-    single_attribute_results = core.compute_single(scores_real, scores_gen, scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen, text_list)
+    forward_KL = compute_KL_divergence_1d_gaussian_pdf(scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen)
+    reverse_KL = compute_KL_divergence_1d_gaussian_pdf(scores_mean_gen, scores_mean_real, scores_cov_gen, scores_cov_real)
+    mean_diff = np.abs(scores_mean_real - scores_mean_gen)
+    f_dist = compute_frechet_distance(scores_mean_real, scores_mean_gen, scores_cov_real, scores_cov_gen)
 
     # save results
     save_dir = f"results_dir/{args.exp}/{args.attr_index}_{args.attr}/{dataset_real}_vs_{dataset_gen}/"
@@ -47,18 +68,15 @@ def main(args):
                     'scores_real': scores_real, 'scores_gen': scores_gen,
                     'scores_mean_real': scores_mean_real, 'scores_mean_gen': scores_mean_gen,
                     'scores_cov_real': scores_cov_real, 'scores_cov_gen': scores_cov_gen,
-                    'forward_KL_single': single_attribute_results[0], 'reverse_KL_single': single_attribute_results[1],
-                    'mean_difference_single': single_attribute_results[2],
-                    'f_distance_single': single_attribute_results[3],
-                    'mmd_polynomial_single': single_attribute_results[4],
-                    'mmd_rbf_single': single_attribute_results[5]}
+                    'forward_KL': forward_KL, 'reverse_KL': reverse_KL,
+                    'mean_diff': mean_diff,
+                    'f_dist': f_dist
+                   }
 
     with open(results_save_path, 'wb') as f:
         pickle.dump(results_dict, f)
 
-    print(f"forward_KL: {single_attribute_results[0]}, reverse_KL_single: {single_attribute_results[1]},"
-          f"mean_difference_single: {single_attribute_results[2]}, f_distance_single: {single_attribute_results[3]},"
-          f"mmd_polynomial_single: {single_attribute_results[4]}, mmd_rbf_single: {single_attribute_results[5]}")
+    print(f"forward_KL: {forward_KL}, reverse_KL: {reverse_KL}, mean_diff: {mean_diff}, f_dist: {f_dist}.")
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f'Excution Time: {elapsed}!')
