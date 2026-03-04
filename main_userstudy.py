@@ -42,7 +42,7 @@ def main(args):
         scores_gen = core.get_hcs(gen_dir, img_mean, text_mean, text_list, batch_size=1000).detach().cpu().numpy()
     elif args.score == 'clip_score':
         scores_real = core.get_cs(real_dir, text_list, batch_size=1000).detach().cpu().numpy()
-        scores_gen = core.get_hcs(gen_dir, text_list, batch_size=1000).detach().cpu().numpy()
+        scores_gen = core.get_cs(gen_dir, text_list, batch_size=1000).detach().cpu().numpy()
     elif args.score == 'evalcs_local_rn':
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
         scores_real = core.get_evalcs_local_rn(real_dir, text_list_prompt, batch_size=1000)
