@@ -71,7 +71,7 @@ def main(args):
         "axes.labelsize": 20,
         "xtick.labelsize": 20,
         "ytick.labelsize": 20,
-        "legend.fontsize": 28,
+        "legend.fontsize": 24,
 
         # cleaner axes
         "axes.linewidth": 1.0,
