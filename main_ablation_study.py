@@ -67,11 +67,11 @@ def main(args):
         "ps.fonttype": 42,
 
         # readable when scaled to 0.25 linewidth
-        "font.size": 18,
-        "axes.labelsize": 18,
-        "xtick.labelsize": 18,
-        "ytick.labelsize": 18,
-        "legend.fontsize": 20,
+        "font.size": 20,
+        "axes.labelsize": 20,
+        "xtick.labelsize": 20,
+        "ytick.labelsize": 20,
+        "legend.fontsize": 28,
 
         # cleaner axes
         "axes.linewidth": 1.0,
