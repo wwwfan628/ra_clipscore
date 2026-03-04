@@ -46,13 +46,17 @@ def main(args):
     elif args.score == 'evalcs_local_rn':
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
         scores_real = core.get_evalcs_local_rn(real_dir, text_list_prompt, batch_size=1000)
-        scores_gen = core.get_evalcs_local_rn(gen_dir, text_list, batch_size=1000)
+        scores_gen = core.get_evalcs_local_rn(gen_dir, text_list_prompt, batch_size=1000)
 
     # compute empirical mean and empirical covariance matrix, then convert GPU tensor to CPU numpy array
     scores_mean_real = scores_real.mean(axis=0)  # shape: n_attr
     scores_mean_gen = scores_gen.mean(axis=0)
-    scores_cov_real = np.cov(scores_real.T)  # phi^2 = EX² - x_mean², shape: n_attr*n_attr
-    scores_cov_gen = np.cov(scores_gen.T)
+    scores_cov_real = np.asarray(np.cov(scores_real.T))  # phi^2 = EX² - x_mean², shape: n_attr*n_attr
+    scores_cov_gen = np.asarray(np.cov(scores_gen.T))
+    #if scores_cov_real.ndim == 0:
+    #    scores_cov_real = scores_cov_real.reshape(1, 1)
+    #if scores_cov_gen.ndim == 0:
+    #    scores_cov_gen = scores_cov_gen.reshape(1, 1)
     print(scores_mean_real, scores_mean_real.shape, scores_mean_gen, scores_mean_gen.shape, scores_cov_real, scores_cov_real.shape, scores_cov_gen, scores_cov_gen.shape)
     print(scores_real, scores_gen)
 
