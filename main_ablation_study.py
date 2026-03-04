@@ -65,16 +65,12 @@ def main(args):
     plt.rcParams.update({
         "pdf.fonttype": 42,  # TrueType for PDF
         "ps.fonttype": 42,
-        "axes.linewidth": 0.8,
-        "xtick.major.width": 0.6,
-        "ytick.major.width": 0.6,
-        "xtick.major.size": 4,
-        "ytick.major.size": 4,
-        "font.size": 9,
-        "axes.labelsize": 9,
-        "xtick.labelsize": 8,
-        "ytick.labelsize": 8,
-        "legend.fontsize": 8,
+        "font.size": 11,
+        "axes.labelsize": 11,
+        "xtick.labelsize": 10,
+        "ytick.labelsize": 10,
+        "legend.fontsize": 10,
+        "axes.linewidth": 1.0,
     })
 
     start_time = time.time()
@@ -116,7 +112,7 @@ def main(args):
             print(f"{k}: {v}\n")
 
         # plot and save figures
-        fig = plt.figure(figsize=(3.3, 2.6))  # CVPR small ratio
+        fig = plt.figure(figsize=(6,4))  # CVPR small ratio
 
         for x, label, color in zip(
                 [scores_negative, scores_positive],
@@ -129,20 +125,18 @@ def main(args):
             # =====================
             #    Plot
             # =====================
+            plt.plot(x_range, kde(x_range), lw=2, label=label)
 
-
-            plt.plot(x_range, kde(x_range), lw=1, label=label)
-
-        plt.xlabel(f"EvalCS_{attr}")
-        plt.ylabel("Density")
+        # plt.xlabel(f"EvalCS_{attr}")
+        # plt.ylabel("Density")
 
         # Light thin grid
-        plt.grid(True, linestyle='--', linewidth=0.3, alpha=0.4)
+        plt.grid(True, linestyle='--', linewidth=0.6, alpha=0.5)
 
         # Legend outside top-left
-        plt.legend(frameon=True, framealpha=0.9, loc='upper left')
+        plt.legend(loc='upper left')
 
-        plt.tight_layout(pad=0.5)
+        plt.tight_layout()
 
         result_save_path = f"{save_dir}/{attr}_{args.score_type}_{args.mode}.png"
         fig.savefig(result_save_path, dpi=600, bbox_inches="tight")
