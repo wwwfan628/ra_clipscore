@@ -6,10 +6,10 @@ from PIL import Image, ImageOps, ImageDraw
 
 # ===================== Configuration =====================
 # /path/to/ImageNet/train/
-BASE_PATH = Path("/home/x_yiflu/dataset/Datasets/Imagenet256-LDM")    # /home/x_yiflu/dataset/Datasets/imagenet256/train # /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
+BASE_PATH = Path("/home/x_yiflu/dataset/Datasets/imagenet256-StyleGAN-XL")    # /home/x_yiflu/dataset/Datasets/imagenet256/train # /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN #/home/x_yiflu/dataset/Datasets/Imagenet256-LDM
 
 # Directory for saving the 3x3 image grids
-OUTPUT_PATH = Path("./ldm_grids")
+OUTPUT_PATH = Path("./stylegan_grids")
 
 # Number of folders (classes) to randomly select
 NUM_FOLDERS = 20
