@@ -6,10 +6,10 @@ from PIL import Image, ImageOps, ImageDraw
 
 # ===================== Configuration =====================
 # /path/to/ImageNet/train/
-BASE_PATH = Path("/home/x_yiflu/dataset/Datasets/imagenet256/train")
+BASE_PATH = Path("/home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN")    # /home/x_yiflu/dataset/Datasets/imagenet256/train
 
 # Directory for saving the 3x3 image grids
-OUTPUT_PATH = Path("./output_grids")
+OUTPUT_PATH = Path("./biggan_grids")
 
 # Number of folders (classes) to randomly select
 NUM_FOLDERS = 20
@@ -111,7 +111,9 @@ def main() -> None:
     OUTPUT_PATH.mkdir(parents=True, exist_ok=True)
 
     # Randomly select 20 unique numbers between 1 and 1000
-    random_numbers = random.sample(range(0, 999), NUM_FOLDERS)
+    # random_numbers = random.sample(range(0, 999), NUM_FOLDERS)
+
+    random_numbers = [654, 114, 25, 759, 281, 250, 228, 142, 754, 104, 692, 758, 913, 558, 89, 604, 432, 32, 30, 95]
 
     print("Randomly selected folder IDs:")
     print(random_numbers)
