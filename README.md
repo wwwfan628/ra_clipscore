@@ -168,6 +168,7 @@ $ python gen_images.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://
 
 Rebuttal
 -------
+### Compute #params, #FLOPs
 CLIP
 python profile_inference.py \
   --model "ViT-B/32" \
@@ -195,9 +196,16 @@ python profile_vqa_flops.py   --config configs/vqa_mplug_base.yaml   --device cu
 ShareGPT4V
 python scripts/profile_vqa_flops.py   --model-path ./ShareGPT4V-7B   --image examples/photo.png   --question "What is shown in this image?"
 ----------
+### CLIP negative prompt
 In CLIP folder locally:
  python prompt_direction_similarity.py ./figs_age/old.jpg ./figs_age/old1.jpg ./figs_age/old2.jpg ./figs_age/old3.jpg --positive 'young' --negative 'not young'
- ----------
-Stanford40
-Classification: Running/Jumping
+----------
+### Action attribute
+Stanford40 Action Classification
+python main_stanford40_classification.py --score_type clip_score
+python main_stanford40_classification.py --score_type hcs
+python main_stanford40_classification.py --score_type EvalCS_local_vit
+----------
+### Different textual prompt
+
 

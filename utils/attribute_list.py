@@ -6,6 +6,11 @@ attr_dict['single_6'] = ["long hair", "short hair", "young", "elder", "makeup", 
 
 attr_dict['ablation_study_4'] = ["black hair", "eyeglasses", "male", "smiling"]
 
+attr_dict['prompt_20'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", \
+                           "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
+                           "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", \
+                           "wearing earrings","beard","double chin", "young"]
+
 attr_dict['compare_20'] = ["man", "woman", "child", "arched eyebrows", "smiling", "wearing hat", \
                            "wearing eyeglasses", "wearing necklace", "blonde hair","black hair", \
                            "bangs","gray hair", "wavy hair", "bald head","red lip", "makeup", \
