@@ -39,7 +39,13 @@ class CelebADataset(Dataset):
         r = re.compile('[0-9]{6}.jpg')
 
         # Load attributes
-        df = pd.read_csv(self.attr_path, header=[0], delimiter=r"\s+")
+        # df = pd.read_csv(self.attr_path, header=[0], delimiter=r"\s+")
+        df = pd.read_csv(
+            self.attr_path,
+            sep=",",
+            header=0,
+            index_col=0,
+        )
         df = df.replace(-1, 0)  # Convert -1 to 0 for binary classification
 
         all_imgs = os.listdir(self.img_dir)
