@@ -94,7 +94,7 @@ def evaluate(scores, labels):
         })
     results.append({
         "attribute": "Mean",
-        "n_positive": np.nan,
+        "n_positive": '',
         "acc": attr_acc.mean(),
         "f1": attr_f1.mean(),
         "auroc": np.nanmean(attr_auroc),
