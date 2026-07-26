@@ -54,7 +54,7 @@ def main(args):
     "washing_dishes",
     "writing_on_a_book",
     "throwing_frisby",
-    "using_a_computer",]
+    "using_a_computer"]
 
     count_positive = get_num_images(args.action_file, attrs)
 
