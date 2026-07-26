@@ -32,7 +32,7 @@ class CelebADataset(Dataset):
         selected_attrs: list of attribute names to use (None = all 40)
         """
         self.root_dir = root_dir
-        self.attr_path = os.path.join(root_dir, attr_file)
+        self.attr_path = os.path.join(root_dir, 'Anno', attr_file)
         self.img_dir = os.path.join(root_dir, img_dir)
         self.transform = transform
 
@@ -216,7 +216,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='Train EvalCoop', description='Script to train EvalCoop')
 
     parser.add_argument('--exp', type=str, default='celebA', help='experiment type, e.g. FFHQ or AFHQ')
-    parser.add_argument('--dataset_dir', type=str, default='/Users/yifanlu/Desktop/Datasets/face1k_furniture1k')
+    parser.add_argument('--dataset_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA1k')
     parser.add_argument('--n_attr', type=int, default=3, help='number of attributes')
     parser.add_argument('--num_epochs', type=int, default=200, help='number of training epochs')
     parser.add_argument('--attr_type', type=str, default='USER', help='attribute type, e.g. BLIP or USER')
