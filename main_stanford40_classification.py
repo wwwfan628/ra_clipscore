@@ -45,24 +45,16 @@ def main(args):
     start_time = time.time()
 
     # How many images are positive for each attributes
-    attrs = [ "blowing_bubbles",
-    "cleaning_the_floor",
-    "climbing",
+    attrs = [ "running",
     "cooking",
-    "cutting_trees",
-    "feeding_a_horse",
-    "looking_through_a_microscope",
-    "playing_guitar",
-    "playing_violin",
-    "riding_a_bike",
     "riding_a_horse",
-    "rowing_a_boat",
-    "running",
-    "shooting_an_arrow",
+    "riding_a_bike",
+    "taking_photos",
     "texting_message",
+    "washing_dishes",
+    "writing_on_a_book",
     "throwing_frisby",
-    "using_a_computer",
-    "washing_dishes"]
+    "using_a_computer",]
 
     count_positive = get_num_images(args.action_file, attrs)
 
