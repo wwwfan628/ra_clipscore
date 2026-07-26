@@ -74,7 +74,17 @@ class CelebADataset(Dataset):
         return image, label
 
 
-def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, save_path='checkpoint.pth',num_epochs=10):
+def train_model(
+        model,
+        train_loader,
+        val_loader,
+        loss_fn,
+        optimizer,
+        scheduler,
+        device,
+        save_path='checkpoint.pth',
+        num_epochs=10
+):
     model.to(device)
 
     best_acc = 0.0
@@ -112,6 +122,7 @@ def train_model(model, train_loader, val_loader, loss_fn, optimizer, device, sav
               f"Precision: {metrics['precision']:.4f} | "
               f"Recall: {metrics['recall']:.4f} | "
               f"F1: {metrics['f1']:.4f} | mAP: {metrics['mAP']:.4f}")
+        scheduler.step()
         print("-" * 80)
 
 
@@ -226,11 +237,25 @@ def main(args):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     loss_fn = nn.BCELoss()
     try:
-        optimizer = torch.optim.Adam(model.prompt_params(), lr=1e-2)
+        optimizer = torch.optim.Adam(model.prompt_params(), lr=1e-3)
     except:
-        optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-2)
+        optimizer = torch.optim.SGD(model.module.prompt_params(), lr=1e-3)
 
-    train_model(model, train_loader, val_loader, loss_fn, optimizer, device, num_epochs=args.num_epochs)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+        optimizer,
+        T_max=args.num_epochs
+    )
+
+    train_model(
+        model,
+        train_loader,
+        val_loader,
+        loss_fn,
+        optimizer,
+        scheduler,
+        device,
+        num_epochs=args.num_epochs
+    )
 
 
 if __name__ == '__main__':
