@@ -396,21 +396,22 @@ def get_hcs_with_labels_action(img_dir, ref_img_dir, attrs, text_list_prompt, ba
 
     # compute mean of text embeddings and image embeddings of real dataset images
     #####################################################################################################
-    # text_list_try = ['dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
-    #                  'wolf', 'fox', 'rabbit', 'squirrel', 'eagle', 'penguin', 'dolphin',
-    #                  'whale', 'snake', 'turtle', 'frog', 'butterfly']
-    # text_list_prompt_try = [f"This is a photo of {item}." for item in text_list_try]
-    # with torch.no_grad():
-    #     text_try = clip.tokenize(text_list_prompt_try).to(device)
-    #     text_features_try = model.encode_text(text_try)
-    # text_features_mean = text_features_try.mean(dim=0)
+    text_list_try = ['dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
+                     'wolf', 'fox', 'rabbit', 'squirrel', 'eagle', 'penguin', 'dolphin',
+                     'whale', 'snake', 'turtle', 'frog', 'butterfly']
+    text_list_prompt_try = [f"This is a photo of {item}." for item in text_list_try]
+    with torch.no_grad():
+        text_try = clip.tokenize(text_list_prompt_try).to(device)
+        text_features_try = model.encode_text(text_try)
+    text_features_try_mean = text_features_try.mean(dim=0)
     #####################################################################################################
 
     with torch.no_grad():
         text = clip.tokenize(text_list_prompt).to(device)
         text_features = model.encode_text(text)
     text_features_mean = text_features.mean(dim=0)
-    text_features = text_features - text_features_mean
+    # text_features = text_features - text_features_mean
+    text_features = text_features - text_features_try_mean
     text_features /= text_features.norm(dim=-1, keepdim=True)
 
     ref_dataset = CustomDataSet(main_dir=ref_img_dir, transform=preprocess)
