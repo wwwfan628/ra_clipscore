@@ -63,9 +63,9 @@ def main(args):
     elif 'rn' in args.score_type:
         scores, labels = core.get_evalcs_local_rn_with_labels_action(img_dir=args.img_dir, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'clip_score':
-        scores, labels = core.get_cs_with_labels_action(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, labels = core.get_cs_with_labels_action(img_dir=args.img_dir, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
     elif args.score_type == 'hcs':
-        scores, labels = core.get_hcs_with_labels_action(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
+        scores, labels = core.get_hcs_with_labels_action(img_dir=args.img_dir, ref_img_dir=args.ref_img_dir, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size)
 
     y_pred = np.zeros_like(scores, dtype=int)
     for j in range(len(count_positive)):
