@@ -183,13 +183,23 @@ def _transform(n_px):
 
 def main(args):
 
-    experiment_name = f"{args.exp}_{args.n_attr}_{args.attr_type}"
-
-    text_list = attr_dict[experiment_name][:args.n_attr]
+    text_list = [
+        'arched eyebrows', 'bags under eyes', 'bald', 'bangs', 'big nose',
+        'black hair', 'blond hair', 'brown hair', 'chubby', 'double chin',
+        'eyeglasses', 'goatee', 'gray hair', 'heavy makeup', 'male',
+        'mouth slightly open', 'mustache', 'no beard', 'sideburns', 'smiling',
+        'straight hair', 'wavy hair', 'wearing earrings', 'wearing hat',
+        'wearing lipstick', 'wearing necklace', 'wearing necktie', 'young'
+    ]
 
     model = evalcoop(text_list)
 
-    selected_attrs = ['Male', 'Smiling', 'Eyeglasses']  # choose what you need
+    selected_attrs = ['Arched_Eyebrows', 'Bags_Under_Eyes', 'Bald', 'Bangs', 'Big_Nose',
+        'Black_Hair', 'Blond_Hair', 'Brown_Hair', 'Chubby', 'Double_Chin',
+        'Eyeglasses', 'Goatee', 'Gray_Hair', 'Heavy_Makeup', 'Male',
+        'Mouth_Slightly_Open', 'Mustache', 'No_Beard', 'Sideburns', 'Smiling',
+        'Straight_Hair', 'Wavy_Hair', 'Wearing_Earrings', 'Wearing_Hat',
+        'Wearing_Lipstick', 'Wearing_Necklace', 'Wearing_Necktie', 'Young']     #['Male', 'Smiling', 'Eyeglasses']  # choose what you need
 
     transform = _transform(model.image_encoder.input_resolution)
 
