@@ -60,6 +60,7 @@ def main(args):
                                               scores_cov_real, scores_cov_gen, text_list)
 
     results_dict = {'attr_list': text_list,
+                    'prompt_id': args.prompt_id,
                     'text_list_prompt': text_list_prompt,
                     'scores_real': scores_real, 'scores_gen': scores_gen,
                     'scores_mean_real': scores_mean_real, 'scores_mean_gen': scores_mean_gen,
