@@ -60,6 +60,26 @@ def rankings_to_positions(rankings):
     return positions
 
 
+def scores_to_tied_ranks(scores, atol, rtol):
+    """Descending average ranks, grouping values indistinguishable by tolerance."""
+    order = np.argsort(-scores, kind="stable")
+    ranks = np.empty(len(scores), dtype=float)
+    start = 0
+    while start < len(order):
+        end = start + 1
+        anchor = scores[order[start]]
+        while end < len(order):
+            value = scores[order[end]]
+            tolerance = atol + rtol * max(abs(anchor), abs(value))
+            if abs(anchor - value) > tolerance:
+                break
+            end += 1
+        # Ranks are one-based; all members of a tie receive their average rank.
+        ranks[order[start:end]] = (start + 1 + end) / 2
+        start = end
+    return ranks
+
+
 def kendalls_w(rankings):
     """Kendall's W for complete rankings (argsort resolves any score ties)."""
     n_judges, n_items = rankings.shape
@@ -72,6 +92,25 @@ def kendalls_w(rankings):
         12 * np.square(rank_sums - rank_sum_mean).sum()
         / (n_judges ** 2 * (n_items ** 3 - n_items))
     )
+
+
+def kendalls_w_with_ties(rank_vectors):
+    """Tie-corrected Kendall's W for rows of one-based average ranks."""
+    n_judges, n_items = rank_vectors.shape
+    if n_items < 2:
+        return np.nan
+    rank_sums = rank_vectors.sum(axis=0)
+    rank_sum_mean = n_judges * (n_items + 1) / 2
+    squared_deviations = np.square(rank_sums - rank_sum_mean).sum()
+    tie_correction = 0
+    for ranks in rank_vectors:
+        _, counts = np.unique(ranks, return_counts=True)
+        tie_correction += np.sum(counts ** 3 - counts)
+    denominator = (
+        n_judges ** 2 * (n_items ** 3 - n_items)
+        - n_judges * tie_correction
+    )
+    return 12 * squared_deviations / denominator if denominator else np.nan
 
 
 def kendalls_tau(position_a, position_b):
@@ -88,6 +127,21 @@ def kendalls_tau(position_a, position_b):
     return concordance / (n_items * (n_items - 1) / 2)
 
 
+def kendalls_tau_b(rank_a, rank_b):
+    """Kendall's tau-b, including ties introduced by the KL tolerance."""
+    products = []
+    non_ties_a = 0
+    non_ties_b = 0
+    for i in range(len(rank_a) - 1):
+        signs_a = np.sign(rank_a[i] - rank_a[i + 1:])
+        signs_b = np.sign(rank_b[i] - rank_b[i + 1:])
+        products.append(np.sum(signs_a * signs_b))
+        non_ties_a += np.square(signs_a).sum()
+        non_ties_b += np.square(signs_b).sum()
+    denominator = np.sqrt(non_ties_a * non_ties_b)
+    return np.sum(products) / denominator if denominator else np.nan
+
+
 def spearman_rank_correlation(position_a, position_b):
     """Spearman's rho for two complete rankings without ties."""
     n_items = len(position_a)
@@ -95,6 +149,18 @@ def spearman_rank_correlation(position_a, position_b):
         return np.nan
     squared_difference = np.square(position_a - position_b).sum()
     return 1 - 6 * squared_difference / (n_items * (n_items ** 2 - 1))
+
+
+def pearson_correlation(values_a, values_b):
+    centered_a = values_a - np.mean(values_a)
+    centered_b = values_b - np.mean(values_b)
+    denominator = np.sqrt(
+        np.square(centered_a).sum() * np.square(centered_b).sum()
+    )
+    return (
+        np.dot(centered_a, centered_b) / denominator
+        if denominator else np.nan
+    )
 
 
 def pairwise_matrix(values, metric):
@@ -120,7 +186,7 @@ def top_k_overlap_matrix(rankings, k):
     )
 
 
-def calculate_agreement(score_lists, rbo_p):
+def calculate_agreement(score_lists, rbo_p, tie_atol, tie_rtol):
     score_arrays = [np.asarray(scores).reshape(-1) for scores in score_lists]
     lengths = {scores.size for scores in score_arrays}
     if len(lengths) != 1:
@@ -131,6 +197,10 @@ def calculate_agreement(score_lists, rbo_p):
         [np.argsort(-scores, kind="stable") for scores in score_arrays]
     )
     positions = rankings_to_positions(rankings)
+    tied_ranks = np.stack([
+        scores_to_tied_ranks(scores, tie_atol, tie_rtol)
+        for scores in score_arrays
+    ])
 
     agreement = {
         "forward_KL_values": np.stack(score_arrays),
@@ -145,6 +215,28 @@ def calculate_agreement(score_lists, rbo_p):
         "rbo_matrix": pairwise_matrix(
             rankings, lambda a, b: rank_biased_overlap(a, b, rbo_p)
         ),
+        "raw_KL_pearson_correlation_matrix": pairwise_matrix(
+            score_arrays, pearson_correlation
+        ),
+        "tie_analysis": {
+            "absolute_tolerance": tie_atol,
+            "relative_tolerance": tie_rtol,
+            "tied_rank_vectors": tied_ranks,
+            "kendalls_w": kendalls_w_with_ties(tied_ranks),
+            "kendalls_tau_b_matrix": pairwise_matrix(
+                tied_ranks, kendalls_tau_b
+            ),
+            "spearman_rank_correlation_matrix": pairwise_matrix(
+                tied_ranks, pearson_correlation
+            ),
+            "number_of_tied_items_per_prompt": np.asarray([
+                sum(
+                    count for count in np.unique(ranks, return_counts=True)[1]
+                    if count > 1
+                )
+                for ranks in tied_ranks
+            ]),
+        },
     }
     for k in TOP_K_VALUES:
         agreement[f"top_{k}_overlap_matrix"] = top_k_overlap_matrix(rankings, k)
@@ -178,11 +270,35 @@ def format_report(summary):
             ("top_3_overlap_matrix", "Top-3 overlap matrix"),
             ("top_5_overlap_matrix", "Top-5 overlap matrix"),
             ("top_10_overlap_matrix", "Top-10 overlap matrix"),
+            ("raw_KL_pearson_correlation_matrix", "Raw KL Pearson correlation matrix"),
         ):
             lines.append(f"{label}:")
             lines.append(np.array2string(
                 result[field], precision=6, suppress_small=True
             ))
+        tie_result = result["tie_analysis"]
+        lines.extend([
+            (
+                "Tie-aware analysis "
+                f"(atol={tie_result['absolute_tolerance']}, "
+                f"rtol={tie_result['relative_tolerance']}):"
+            ),
+            (
+                "Number of items assigned a tied rank per prompt: "
+                f"{tie_result['number_of_tied_items_per_prompt']}"
+            ),
+            f"Tie-corrected Kendall's W: {tie_result['kendalls_w']:.6f}",
+            "Tie-aware Kendall's tau-b matrix:",
+            np.array2string(
+                tie_result["kendalls_tau_b_matrix"],
+                precision=6, suppress_small=True,
+            ),
+            "Tie-aware Spearman rank correlation matrix:",
+            np.array2string(
+                tie_result["spearman_rank_correlation_matrix"],
+                precision=6, suppress_small=True,
+            ),
+        ])
     return "\n".join(lines)
 
 
@@ -203,6 +319,14 @@ def parse_args():
         help="RBO persistence; p=0.8 emphasizes approximately the first 5 ranks.",
     )
     parser.add_argument(
+        "--tie_atol", type=float, default=1e-5,
+        help="Absolute KL difference treated as a tie (default: 1e-5).",
+    )
+    parser.add_argument(
+        "--tie_rtol", type=float, default=0.0,
+        help="Relative KL difference treated as a tie (default: 0).",
+    )
+    parser.add_argument(
         "--output_name", default="prompt_ranking_agreement",
         help="Output basename; .pkl and .txt are written under results_dir.",
     )
@@ -215,6 +339,8 @@ def main():
         raise ValueError(f"--rbo_p must be between 0 and 1, got {args.rbo_p}")
     if len(args.prompt_ids) < 2:
         raise ValueError("At least two prompt IDs are required")
+    if args.tie_atol < 0 or args.tie_rtol < 0:
+        raise ValueError("--tie_atol and --tie_rtol must be non-negative")
 
     prompt_results = load_prompt_results(args.results_dir, args.prompt_ids)
     summary = {
@@ -223,7 +349,10 @@ def main():
     }
     for metric_name in METRIC_NAMES:
         summary[metric_name] = calculate_agreement(
-            [result[metric_name] for result in prompt_results], args.rbo_p
+            [result[metric_name] for result in prompt_results],
+            args.rbo_p,
+            args.tie_atol,
+            args.tie_rtol,
         )
 
     report = format_report(summary)
