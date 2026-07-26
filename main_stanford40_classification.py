@@ -53,9 +53,9 @@ def main(args):
     text_list = ['running', 'jumping', 'climbing', 'fishing', 'fixing a bike', 'feeding a horse', 'holding an umbrella', 'playing guitar', 'rowing a boat', 'walking the dog']
 
     if 'vit' in args.score_type or 'rn' in args.score_type:
-        text_list_prompt = [f"This is a photo without people {item}." for item in text_list] + [f"This is a photo of people {item}." for item in text_list]
+        text_list_prompt = [f"This is a photo not {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
     elif args.score_type == 'clip_score' or args.score_type == 'hcs':
-        text_list_prompt = [f"This is a photo of people {item}." for item in text_list]
+        text_list_prompt = [f"This is a photo of {item}." for item in text_list]
 
     # calculate scores
     if 'vit' in args.score_type:
