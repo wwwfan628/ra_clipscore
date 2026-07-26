@@ -304,6 +304,33 @@ def get_cs_with_labels(img_dir, anno_file, attrs, text_list_prompt, batch_size=1
     return scores, labels
 
 
+def get_cs_with_labels_action(img_dir, attrs, text_list_prompt, batch_size=1000):
+    print(f"********** calculating ClipScore **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/16", device=device)
+    model.eval()
+
+    dataset = Stanford40Dataset(img_dir=img_dir, target_actions=attrs, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False,
+                                             num_workers=32)
+
+    text = clip.tokenize(text_list_prompt).to(device)
+
+    scores_list = []
+    labels_list = []
+
+    with torch.no_grad():
+        for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            scores, _ = model(images.to(device), text)  # images [1000, 3, 224, 224]  text [2 * n_attr, 77]  scores [1000, n_attr]  scores_per_patch [1000, 196, n_attr]
+            scores_list.append(scores.cpu().numpy())
+            labels_list.append(labels.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+    labels = np.concatenate(labels_list)
+
+    return scores, labels
+
+
 def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt, batch_size=1000):
     print(f"********** calculating HCS **********")
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -341,6 +368,63 @@ def get_hcs_with_labels(img_dir, ref_img_dir, anno_file, attrs, text_list_prompt
 
     # compute HCS
     dataset = AttrDataSet(img_dir=img_dir, anno_file=anno_file, attrs=attrs, transform=preprocess)
+    dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
+
+    scores_list = []
+    labels_list = []
+    with torch.no_grad():
+        for index, (images, labels) in tqdm(enumerate(dataloader), total=len(dataloader)):  # [1000, 3, 224, 224]
+            images_features = model.encode_image(images.to(device))
+            images_features = images_features - ref_img_features_mean
+            images_features /= images_features.norm(dim=-1, keepdim=True)
+            scores = (100 * images_features @ text_features.T)
+            scores_list.append(scores.cpu().numpy())
+            labels_list.append(labels.cpu().numpy())
+
+    scores = np.concatenate(scores_list)  # [50000=num of batch 50 x batch size 1000, n_attr]  binary classification scores for each class of whole image
+    labels = np.concatenate(labels_list)
+
+    return scores, labels
+
+
+
+def get_hcs_with_labels_action(img_dir, ref_img_dir, attrs, text_list_prompt, batch_size=1000):
+    print(f"********** calculating HCS **********")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, preprocess = clip.load("ViT-B/16", device=device)
+    model.eval()
+
+    # compute mean of text embeddings and image embeddings of real dataset images
+    #####################################################################################################
+    # text_list_try = ['dog', 'cat', 'tiger', 'lion', 'bear', 'elephant', 'giraffe', 'zebra',
+    #                  'wolf', 'fox', 'rabbit', 'squirrel', 'eagle', 'penguin', 'dolphin',
+    #                  'whale', 'snake', 'turtle', 'frog', 'butterfly']
+    # text_list_prompt_try = [f"This is a photo of {item}." for item in text_list_try]
+    # with torch.no_grad():
+    #     text_try = clip.tokenize(text_list_prompt_try).to(device)
+    #     text_features_try = model.encode_text(text_try)
+    # text_features_mean = text_features_try.mean(dim=0)
+    #####################################################################################################
+
+    with torch.no_grad():
+        text = clip.tokenize(text_list_prompt).to(device)
+        text_features = model.encode_text(text)
+    text_features_mean = text_features.mean(dim=0)
+    text_features = text_features - text_features_mean
+    text_features /= text_features.norm(dim=-1, keepdim=True)
+
+    ref_dataset = CustomDataSet(main_dir=ref_img_dir, transform=preprocess)
+    ref_dataloader = torch.utils.data.DataLoader(ref_dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
+    ref_img_features_list = []
+    with torch.no_grad():
+        for index, (datas) in tqdm(enumerate(ref_dataloader), total=len(ref_dataloader)):
+            ref_image_features = model.encode_image(datas.to(device))
+            ref_img_features_list.append(ref_image_features)
+    ref_img_features = torch.cat(ref_img_features_list)
+    ref_img_features_mean = ref_img_features.mean(dim=0)
+
+    # compute HCS
+    dataset = Stanford40Dataset(img_dir=img_dir, target_actions=attrs, transform=preprocess)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, drop_last=False, num_workers=32)
 
     scores_list = []
