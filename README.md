@@ -207,5 +207,7 @@ python main_stanford40_classification.py --score_type hcs
 python main_stanford40_classification.py --score_type EvalCS_local_vit
 ----------
 ### Different textual prompt
+python main_dataset_compare_prompt.py --prompt_id 1 # about 1h for each prompt
+
 
 
