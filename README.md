@@ -208,6 +208,11 @@ python main_stanford40_classification.py --score_type EvalCS_local_vit
 ----------
 ### Different textual prompt
 python main_dataset_compare_prompt.py --prompt_id 1 # about 1h for each prompt
+pythonc alculate_prompt_ranking_agreement.py --results_dir ./results_dir/prompt_20_EvalCS_local_rn/A_vs_C
+-----------
+### Soft-Prompts
+python celeba_50k.py # create 1k dataset
+python train_eval_coop.py --exp 'celebA' --dataset_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/face1k_furniture1k --n_attr 3 --attr_type 'USER' --num_epochs 200
 
 
 
