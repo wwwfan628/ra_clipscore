@@ -77,8 +77,8 @@ def main(args):
     mean_attr_acc = attr_acc.mean()
 
     # Average Accuracy (mean balanced accuracy across attributes)
-    average_acc_per_attr = []
-    auroc_per_attr = []
+    average_acc_per_attr = np.full(len(attrs), np.nan)
+    auroc_per_attr = np.full(len(attrs), np.nan)
     for j, attr in enumerate(attrs):
         positive_mask = labels[:, j] == 1
         negative_mask = labels[:, j] == 0
@@ -86,24 +86,24 @@ def main(args):
         if positive_mask.any() and negative_mask.any():
             true_positive_rate = y_pred[positive_mask, j].mean()
             true_negative_rate = (y_pred[negative_mask, j] == 0).mean()
-            average_acc_per_attr.append(
-                (true_positive_rate + true_negative_rate) / 2
-            )
-            auroc_per_attr.append(roc_auc_score(labels[:, j], scores[:, j]))
+            average_acc_per_attr[j] = (
+                true_positive_rate + true_negative_rate
+            ) / 2
+            auroc_per_attr[j] = roc_auc_score(labels[:, j], scores[:, j])
         else:
             print(
                 f"Warning: skipping {attr!r} for Average Accuracy and AUROC "
                 "because only one label class is present."
             )
 
-    average_acc = (
-        float(np.mean(average_acc_per_attr))
-        if average_acc_per_attr
-        else float("nan")
-    )
-    auroc = float(np.mean(auroc_per_attr)) if auroc_per_attr else float("nan")
+    average_acc = float(np.nanmean(average_acc_per_attr))
+    auroc = float(np.nanmean(auroc_per_attr))
 
     # F1 scores
+    f1_per_attr = np.array([
+        f1_score(labels[:, j], y_pred[:, j], zero_division=0)
+        for j in range(len(attrs))
+    ])
     f1_macro = f1_score(labels, y_pred, average='macro')
     f1_micro = f1_score(labels, y_pred, average='micro')
 
@@ -112,6 +112,23 @@ def main(args):
     print("AUROC:", auroc)
     print("Macro F1:", f1_macro)
     print("Micro F1:", f1_micro)
+
+    results_table = pd.DataFrame({
+        "Class": attrs,
+        "Accuracy": attr_acc,
+        "Average Accuracy": average_acc_per_attr,
+        "AUROC": auroc_per_attr,
+        "F1": f1_per_attr,
+    })
+    results_table.loc[len(results_table)] = {
+        "Class": "Macro Average",
+        "Accuracy": mean_attr_acc,
+        "Average Accuracy": average_acc,
+        "AUROC": auroc,
+        "F1": f1_macro,
+    }
+    print("\nPer-class Results:")
+    print(results_table.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
 
     elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
     print(f'Excution Time: {elapsed}!')
