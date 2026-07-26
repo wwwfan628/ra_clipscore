@@ -23,7 +23,7 @@ import numpy as np
 
 
 class CelebADataset(Dataset):
-    def __init__(self, root_dir, attr_file='list_attr_celeba.txt', img_dir='Img', transform=None, selected_attrs=None):
+    def __init__(self, root_dir, attr_file='list_attr_celeba1k.txt', img_dir='Img', transform=None, selected_attrs=None):
         """
         root_dir: path to CelebA root directory
         attr_file: file with attributes
