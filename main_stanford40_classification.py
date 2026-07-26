@@ -45,12 +45,12 @@ def main(args):
     start_time = time.time()
 
     # How many images are positive for each attributes
-    attrs = [ 'running', 'jumping', 'climbing', 'cooking', 'fishing', 'fixing_a_bike', 'feeding_a_horse', 'holding_an_umbrella', 'playing_guitar', 'rowing_a_boat', 'walking_the_dog', 'using_a_computer']
+    attrs = [ 'running', 'jumping', 'climbing', 'fishing', 'fixing_a_bike', 'feeding_a_horse', 'holding_an_umbrella', 'playing_guitar', 'rowing_a_boat', 'walking_the_dog']
 
     count_positive = get_num_images(args.action_file, attrs)
 
     # text_list = [a.lower().replace('_', ' ') for a in attrs]
-    text_list = ['running', 'jumping', 'climbing', 'cooking', 'fishing', 'fixing a bike', 'feeding a horse', 'holding an umbrella', 'playing guitar', 'rowing a boat', 'walking the dog', 'using a computer']
+    text_list = ['running', 'jumping', 'climbing', 'fishing', 'fixing a bike', 'feeding a horse', 'holding an umbrella', 'playing guitar', 'rowing a boat', 'walking the dog']
 
     if 'vit' in args.score_type or 'rn' in args.score_type:
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
