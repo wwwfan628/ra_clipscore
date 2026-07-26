@@ -12,7 +12,14 @@ def main(args):
     os.makedirs(args.target_anno_path, exist_ok=True)
 
     # move celeba faces
-    annotations = pd.read_csv(args.celeba_anno_path, header=[0], delimiter=r"\s+")
+    # annotations = pd.read_csv(args.celeba_anno_path, header=[0], delimiter=r"\s+")
+    annotations = pd.read_csv(
+        args.celeba_anno_path,
+        sep=r"\s+",
+        skiprows=1,
+        header=0,
+        index_col=0,
+    )
     celeba_figs = annotations.index.tolist()
     random.shuffle(celeba_figs)
     annotations_celeba50k = annotations.loc[celeba_figs[:args.num_figs]]
