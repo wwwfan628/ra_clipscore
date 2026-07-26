@@ -815,7 +815,7 @@ class CLIP_ViT_Local(nn.Module):
         return x
 
     def forward(self, image, text):
-        image_features, attn_weight_list = self.encode_image(image)
+        image_features, attn_weight_list = self.encode_image(image, attn_mask=1)
         text_features = self.encode_text(text)
 
         # normalized features

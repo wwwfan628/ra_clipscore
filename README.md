@@ -164,3 +164,40 @@ $ python gen_images.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://
 
 
 ### 5) Spatial Evaluation of SOTA Generative Models (ImageNet)
+
+
+Rebuttal
+-------
+CLIP
+python profile_inference.py \
+  --model "ViT-B/32" \
+  --image-batch-size 1 \
+  --text-batch-size 1
+
+
+CLIP-FlanT5
+python scripts/profile_inference.py \
+  --model-path zhiqiulin/clip-flant5-xl \
+  --image-file images/example1.jpg \
+  --query "Describe this image." \
+  --decoder-length 32 \
+  --show-table
+
+BLIP-VQA
+python profile_blip_vqa.py --image merlion.png --question "Which city is this photo taken?" --device cuda
+
+MiniGPT4
+python eval_scripts/profile_vqa_flops.py --cfg-path eval_configs/minigpt4_eval.yaml --image merlion.png --question "What is shown in this image?" --show-table
+
+mPLUG
+python profile_vqa_flops.py   --config configs/vqa_mplug_base.yaml   --device cuda   --batch-size 1   --question-length 25   --answer-length 10   --beam-size 5
+
+ShareGPT4V
+python scripts/profile_vqa_flops.py   --model-path ./ShareGPT4V-7B   --image examples/photo.png   --question "What is shown in this image?"
+----------
+In CLIP folder locally:
+ python prompt_direction_similarity.py ./figs_age/old.jpg ./figs_age/old1.jpg ./figs_age/old2.jpg ./figs_age/old3.jpg --positive 'young' --negative 'not young'
+ ----------
+Stanford40
+Classification: Running/Jumping
+
