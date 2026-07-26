@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, average_precision_score
+from sklearn.metrics import precision_score, recall_score, f1_score, average_precision_score
 import os
 import natsort
 import pandas as pd
@@ -156,7 +156,7 @@ def validate_model(model, val_loader, loss_fn, device):
     all_targets = torch.cat(all_targets).cpu().numpy()
 
     # Metrics
-    accuracy = accuracy_score(all_targets, all_preds)
+    accuracy = (all_targets == all_preds).mean()
     precision = precision_score(all_targets, all_preds, average='samples', zero_division=0)
     recall = recall_score(all_targets, all_preds, average='samples', zero_division=0)
     f1 = f1_score(all_targets, all_preds, average='samples', zero_division=0)
