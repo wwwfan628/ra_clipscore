@@ -45,15 +45,54 @@ def main(args):
     start_time = time.time()
 
     # How many images are positive for each attributes
-    attrs = [ 'running', 'jumping', 'climbing', 'fishing', 'fixing_a_bike', 'feeding_a_horse', 'holding_an_umbrella', 'playing_guitar', 'rowing_a_boat', 'walking_the_dog']
+    attrs = [ "applauding",
+    "blowing_bubbles",
+    "brushing_teeth",
+    "cleaning_the_floor",
+    "climbing",
+    "cooking",
+    "cutting_trees",
+    "cutting_vegetables",
+    "drinking",
+    "feeding_a_horse",
+    "fishing",
+    "fixing_a_bike",
+    "fixing_a_car",
+    "gardening",
+    "holding_an_umbrella",
+    "jumping",
+    "looking_through_a_microscope",
+    "looking_through_a_telescope",
+    "playing_guitar",
+    "playing_violin",
+    "pouring_liquid",
+    "pushing_a_cart",
+    "reading",
+    "phoning",
+    "riding_a_bike",
+    "riding_a_horse",
+    "rowing_a_boat",
+    "running",
+    "shooting_an_arrow",
+    "smoking",
+    "taking_photos",
+    "texting_message",
+    "throwing_frisby",
+    "using_a_computer",
+    "walking_the_dog",
+    "washing_dishes",
+    "watching_TV",
+    "waving_hands",
+    "writing_on_a_board",
+    "writing_on_a_book"]
 
     count_positive = get_num_images(args.action_file, attrs)
 
-    # text_list = [a.lower().replace('_', ' ') for a in attrs]
-    text_list = ['running', 'jumping', 'climbing', 'fishing', 'fixing a bike', 'feeding a horse', 'holding an umbrella', 'playing guitar', 'rowing a boat', 'walking the dog']
+    text_list = [a.lower().replace('_', ' ') for a in attrs]
+    # text_list = ['running', 'jumping', 'climbing', 'fishing', 'fixing a bike', 'feeding a horse', 'holding an umbrella', 'playing guitar', 'rowing a boat', 'walking the dog']
 
     if 'vit' in args.score_type or 'rn' in args.score_type:
-        text_list_prompt = [f"This is a photo not {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
+        text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
     elif args.score_type == 'clip_score' or args.score_type == 'hcs':
         text_list_prompt = [f"This is a photo of {item}." for item in text_list]
 
