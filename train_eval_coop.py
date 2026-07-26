@@ -2,7 +2,6 @@ import torch
 from torch import nn
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, average_precision_score
 import os
-import re
 import natsort
 import pandas as pd
 import torch
@@ -19,7 +18,6 @@ from torch.utils.data import random_split, DataLoader
 import argparse
 from eval_clip import evalcoop
 from utils.attribute_list import *
-import numpy as np
 
 
 class CelebADataset(Dataset):
@@ -36,8 +34,6 @@ class CelebADataset(Dataset):
         self.img_dir = os.path.join(root_dir, img_dir)
         self.transform = transform
 
-        r = re.compile('[0-9]{6}.jpg')
-
         # Load attributes
         # df = pd.read_csv(self.attr_path, header=[0], delimiter=r"\s+")
         df = pd.read_csv(
@@ -49,14 +45,20 @@ class CelebADataset(Dataset):
         df = df.replace(-1, 0)  # Convert -1 to 0 for binary classification
 
         all_imgs = os.listdir(self.img_dir)
-        self.filenames = natsort.natsorted(all_imgs)
+        self.filenames = natsort.natsorted(
+            filename
+            for filename in all_imgs
+            if filename.lower().endswith(('.jpg', '.jpeg'))
+            and filename in df.index
+        )
         if selected_attrs is not None:
             self.attr_names = selected_attrs
         else:
             self.attr_names = df.columns.tolist()
-        self.labels = [df[self.attr_names].loc[f].values.astype('float32') if r.match(f) else
-                       np.zeros(len(self.attr_names)).astype('float32')
-                       for f in self.filenames]
+        self.labels = [
+            df.loc[filename, self.attr_names].values.astype('float32')
+            for filename in self.filenames
+        ]
 
     def __len__(self):
         return len(self.filenames)
@@ -147,7 +149,11 @@ def validate_model(model, val_loader, loss_fn, device):
     precision = precision_score(all_targets, all_preds, average='samples', zero_division=0)
     recall = recall_score(all_targets, all_preds, average='samples', zero_division=0)
     f1 = f1_score(all_targets, all_preds, average='samples', zero_division=0)
-    mAP = average_precision_score(all_targets, all_probs, average='samples')
+    mAP = average_precision_score(
+        all_targets,
+        all_probs,
+        average='macro'
+    )
 
     avg_loss = running_loss / len(val_loader.dataset)
 
