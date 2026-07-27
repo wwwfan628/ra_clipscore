@@ -45,8 +45,8 @@ def compute_single_attr(class_id, class_label, real_dir, gen_dir, save_dir):
     #         pickle.dump(attn_weight_list_gen, f)
 
     # calculate scores
-    _, scores_real = core.get_evalcs_local_vit(dataset_real_path, text_list_prompt).detach().cpu().numpy()  # [n_batch, 196, n_attr]
-    _, scores_gen = core.get_evalcs_local_vit(dataset_gen_path, text_list_prompt).detach().cpu().numpy()  # [n_batch, 196, n_attr]
+    _, scores_real = core.get_evalcs_local_vit(dataset_real_path, text_list_prompt) # [n_batch, 196, n_attr]
+    _, scores_gen = core.get_evalcs_local_vit(dataset_gen_path, text_list_prompt)  # [n_batch, 196, n_attr]
 
     # compute empirical mean and empirical covariance matrix, then convert GPU tensor to CPU numpy array
     scores_mean_real = scores_real.mean(axis=0)  # [196, n_attr]
