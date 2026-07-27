@@ -137,21 +137,21 @@ def main(args):
         ]
     elif args.attr_type=='local':
         attrs = [
-            "Arched_Eyebrows",
             "Bags_Under_Eyes",
-            "Bushy_Eyebrows",
+            "Blond_Hair",
             "Pointy_Nose",
             "Sideburns",
-            "Wearing_Necklace"
+            "Wavy_Hair",
+            "Young"
         ]
 
         text_list = [
-            "arched eyebrows",
             "eye bags",
-            "thick eyebrows",
+            "blond hair",
             "pointed nose",
             "sideburns",
-            "wearing a necklace",
+            "wavy hair",
+            "young person"
         ]
 
     if (('vit' in args.score_type) and (args.mode != 'without_dual_prompts')) or (('rn' in args.score_type) and (args.mode != 'without_dual_prompts')):
