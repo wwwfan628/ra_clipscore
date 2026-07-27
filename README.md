@@ -221,5 +221,10 @@ python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/
 ### Rerun ablation study
 python main_ablation_study.py --score_type EvalCS_local_vit --mode without_dual_prompts # full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine
 python main_ablation_study_rebuttal.py --score_type EvalCS_local_vit --mode without_dual_prompts --attr_type all # all, global, local
-
+----------
+### COCO Localization
+python evaluate_raclip_coco_patches.py \
+  --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
+  --images /proj/common-datasets/COCO/val2014 \
+  --max-images 100
 
