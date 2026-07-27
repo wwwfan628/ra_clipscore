@@ -226,5 +226,10 @@ python main_ablation_study_rebuttal.py --score_type EvalCS_local_vit --mode with
 python evaluate_raclip_coco_patches.py \
   --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
   --images /proj/common-datasets/COCO/val2014 \
-  --max-images 100
+
+copy evaluate_clip_coco_patches.py to CLIP folder
+python evaluate_clip_coco_patches.py \
+  --model ViT-B/16 \
+  --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
+  --images /proj/common-datasets/COCO/val2014
 
