@@ -61,52 +61,98 @@ def separation_scores(scores_positive, scores_negative, bins=512):
 def main(args):
 
     start_time = time.time()
+    if args.attr_type=='all':
+        attrs = [
+            "Arched_Eyebrows",
+            "Bags_Under_Eyes",
+            "Bangs",
+            "Black_Hair",
+            "Blond_Hair",
+            "Brown_Hair",
+            "Bushy_Eyebrows",
+            "Chubby",
+            "Double_Chin",
+            "Gray_Hair",
+            "Male",
+            "Narrow_Eyes",
+            "Pale_Skin",
+            "Pointy_Nose",
+            "Receding_Hairline",
+            "Sideburns",
+            "Straight_Hair",
+            "Wavy_Hair",
+            "Wearing_Necklace",
+            "Young",
+        ]
 
-    attrs = [
-        "Arched_Eyebrows",
-        "Bags_Under_Eyes",
-        "Bangs",
-        "Black_Hair",
-        "Blond_Hair",
-        "Brown_Hair",
-        "Bushy_Eyebrows",
-        "Chubby",
-        "Double_Chin",
-        "Gray_Hair",
-        "Male",
-        "Narrow_Eyes",
-        "Pale_Skin",
-        "Pointy_Nose",
-        "Receding_Hairline",
-        "Sideburns",
-        "Straight_Hair",
-        "Wavy_Hair",
-        "Wearing_Necklace",
-        "Young",
-    ]
+        text_list = [
+            "arched eyebrows",
+            "eye bags",
+            "hair bangs",
+            "black hair",
+            "blond hair",
+            "brown hair",
+            "thick eyebrows",
+            "chubby face",
+            "double chin",
+            "gray hair",
+            "male",
+            "narrow eyes",
+            "pale skin",
+            "pointed nose",
+            "receding hairline",
+            "sideburns",
+            "straight hair",
+            "wavy hair",
+            "wearing a necklace",
+            "young person"
+        ]
+    elif args.attr_type=='global':
+        attrs = [
+            "Blond_Hair",
+            "Brown_Hair",
+            "Chubby",
+            "Double_Chin",
+            "Gray_Hair",
+            "Male",
+            "Narrow_Eyes",
+            "Receding_Hairline",
+            "Straight_Hair",
+            "Wavy_Hair",
+            "Young"
+        ]
 
-    text_list = [
-        "arched eyebrows",
-        "eye bags",
-        "hair bangs",
-        "black hair",
-        "blond hair",
-        "brown hair",
-        "thick eyebrows",
-        "chubby face",
-        "double chin",
-        "gray hair",
-        "male",
-        "narrow eyes",
-        "pale skin",
-        "pointed nose",
-        "receding hairline",
-        "sideburns",
-        "straight hair",
-        "wavy hair",
-        "wearing a necklace",
-        "young person"
-    ]
+        text_list = [
+            "blond hair",
+            "brown hair",
+            "chubby face",
+            "double chin",
+            "gray hair",
+            "male",
+            "narrow eyes",
+            "receding hairline",
+            "straight hair",
+            "wavy hair",
+            "young person",
+        ]
+    elif args.attr_type=='local':
+        attrs = [
+            "Arched_Eyebrows",
+            "Bags_Under_Eyes",
+            "Bushy_Eyebrows",
+            "Pointy_Nose",
+            "Sideburns",
+            "Wearing_Necklace"
+        ]
+
+        text_list = [
+            "arched eyebrows",
+            "eye bags",
+            "thick eyebrows",
+            "pointed nose",
+            "sideburns",
+            "wearing a necklace",
+        ]
 
     if (('vit' in args.score_type) and (args.mode != 'without_dual_prompts')) or (('rn' in args.score_type) and (args.mode != 'without_dual_prompts')):
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
@@ -225,6 +271,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', type=str, default='full', help='choose from: full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to extract image features')
     parser.add_argument('--visualize', action='store_true')
+    parser.add_argument('--attr_type', type=str, default='all', help='choose from: all, global, local')
 
     args = parser.parse_args()
     main(args)
