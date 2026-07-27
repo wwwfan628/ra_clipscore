@@ -143,6 +143,7 @@ def main(args):
         print(f'Excution Time for Class {class_id} ({class_label}): {elapsed}!')
 
     print(
+        f'{dataset_real}_vs_{dataset_gen}: '
         f'abs_mean_diff_mean_results: mean={np.mean(abs_mean_diff_mean_results):.6f}, '
         f'std={np.std(abs_mean_diff_mean_results):.6f}'
     )
