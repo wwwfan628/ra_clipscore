@@ -18,7 +18,7 @@ def compute_single_attr(class_id, class_label, real_dir, gen_dir, save_dir):
     dataset_real_path = os.path.join(real_dir, 'train', str(class_id))
     dataset_gen_path = os.path.join(gen_dir, str(class_id))
 
-    text_features = core.get_text_features_eval_clip_local_vit(text_list_prompt)  # [44, 512]
+    # text_features = core.get_text_features_eval_clip_local_vit(text_list_prompt)  # [44, 512]
 
     # if os.path.exists(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl') and os.path.exists(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl'):
     #     with open(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl', 'rb') as f:
