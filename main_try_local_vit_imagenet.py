@@ -104,13 +104,13 @@ def main(args):
         f_distance_results.append(f_distance)
         f_distance_max_results.append(f_distance.max())
         f_distance_mean_results.append(f_distance.mean())
-        f_distance_norm = (f_distance - f_distance.min()) / (f_distance.max() - f_distance.min())
+        f_distance_norm = (f_distance - f_distance.min()) / (f_distance.max() - f_distance.min() + 1e-8)
         f_distance_results_norm.append(f_distance_norm)
 
         kl_divergence_results.append(kl_divergence)
         kl_divergence_max_results.append(kl_divergence.max())
         kl_divergence_mean_results.append(kl_divergence.mean())
-        kl_divergence_norm = (kl_divergence - kl_divergence.min()) / (kl_divergence.max() - kl_divergence.min())
+        kl_divergence_norm = (kl_divergence - kl_divergence.min()) / (kl_divergence.max() - kl_divergence.min() + 1e-8)
         kl_divergence_results_norm.append(kl_divergence_norm)
 
         if args.visualize == True:
