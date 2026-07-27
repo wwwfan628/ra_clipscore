@@ -75,11 +75,11 @@ def main(args):
     f_distance_results = []
     kl_divergence_results = []
 
-    mean_diff_max_results = []
+    abs_mean_diff_max_results = []
     f_distance_max_results = []
     kl_divergence_max_results = []
 
-    mean_diff_mean_results = []
+    abs_mean_diff_mean_results = []
     f_distance_mean_results = []
     kl_divergence_mean_results = []
 
@@ -96,8 +96,8 @@ def main(args):
         mean_diff, f_distance, kl_divergence = compute_single_attr(class_id, class_label, args.real_dir, args.gen_dir, f'results_dir/{args.exp}')
 
         mean_diff_results.append(mean_diff)
-        mean_diff_max_results.append(mean_diff.max())
-        mean_diff_mean_results.append(mean_diff.mean())
+        abs_mean_diff_max_results.append(np.abs(mean_diff).max())
+        abs_mean_diff_mean_results.append(np.abs(mean_diff).mean())
         mean_diff_norm = (mean_diff - mean_diff.min()) / (mean_diff.max() - mean_diff.min() + 1e-8)
         mean_diff_results_norm.append(mean_diff_norm)
 
@@ -143,26 +143,27 @@ def main(args):
         print(f'Excution Time for Class {class_id} ({class_label}): {elapsed}!')
 
     print(
-        f'mean_diff_mean_results: mean={np.mean(mean_diff_mean_results):.6f}, '
-        f'std={np.std(mean_diff_mean_results):.6f}'
+        f'abs_mean_diff_mean_results: mean={np.mean(abs_mean_diff_mean_results):.6f}, '
+        f'std={np.std(abs_mean_diff_mean_results):.6f}'
     )
 
+    os.makedirs(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}', exist_ok=True)
     results_dict = {'mean_diff_results': mean_diff_results, 'f_distance_results': f_distance_results,
-                 'kl_divergence_results': kl_divergence_results, 'mean_diff_max_results': mean_diff_max_results,
+                 'kl_divergence_results': kl_divergence_results, 'abs_mean_diff_max_results': abs_mean_diff_max_results,
                  'f_distance_max_results': f_distance_max_results, 'kl_divergence_max_results': kl_divergence_max_results,
-                 'mean_diff_mean_results': mean_diff_mean_results, 'f_distance_mean_results': f_distance_mean_results,
+                 'abs_mean_diff_mean_results': abs_mean_diff_mean_results, 'f_distance_mean_results': f_distance_mean_results,
                  'kl_divergence_mean_results': kl_divergence_mean_results, 'mean_diff_results_norm': mean_diff_results_norm,
                  'f_distance_results_norm': f_distance_results_norm, 'kl_divergence_results_norm': kl_divergence_results_norm}
 
     with open(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/results_dict.pkl', 'wb') as f:
         pickle.dump(results_dict, f)
 
-    max_10_labels_mean_diff = sorted(range(1000), key=lambda i: mean_diff_max_results[i], reverse=True)[:10]
+    max_10_labels_mean_diff = sorted(range(1000), key=lambda i: abs_mean_diff_max_results[i], reverse=True)[:10]
     print("According to mean_diff (max):")
     for i in max_10_labels_mean_diff:
         print(f"  index={i}, label={labels[i]}")
 
-    mean_10_labels_mean_diff = sorted(range(1000), key=lambda i: mean_diff_mean_results[i], reverse=True)[:10]
+    mean_10_labels_mean_diff = sorted(range(1000), key=lambda i: abs_mean_diff_mean_results[i], reverse=True)[:10]
     print("According to mean_diff (mean):")
     for i in mean_10_labels_mean_diff:
         print(f"  index={i}, label={labels[i]}")
