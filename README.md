@@ -213,6 +213,10 @@ pythonc alculate_prompt_ranking_agreement.py --results_dir ./results_dir/prompt_
 ### Soft-Prompts
 python celeba_50k.py # create 1k dataset
 python train_eval_coop.py --exp 'celebA' --dataset_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/face1k_furniture1k --n_attr 3 --attr_type 'USER' --num_epochs 200
+python main_celeba_classification_coop.py
+-----------
+
+
 
 
 

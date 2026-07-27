@@ -114,34 +114,38 @@ def main(args):
         kl_divergence_norm = (kl_divergence - kl_divergence.min()) / (kl_divergence.max() - kl_divergence.min())
         kl_divergence_results_norm.append(kl_divergence_norm)
 
+        if args.visualize == True:
+            # Visualization
+            score_name = 'dual prompts: first refine with attention, then softmax'
 
-        # Visualization
-        score_name = 'dual prompts: first refine with attention, then softmax'
+            heatmap = (mean_diff_norm.reshape(14, 14))
+            plt.imshow(heatmap, cmap="rainbow")
+            plt.colorbar()
+            plt.title(f"Heatmap of Mean Difference \n {score_name}")
+            plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/mean_diff.pdf')
+            plt.close()
 
-        heatmap = (mean_diff_norm.reshape(14, 14))
-        plt.imshow(heatmap, cmap="rainbow")
-        plt.colorbar()
-        plt.title(f"Heatmap of Mean Difference \n {score_name}")
-        plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/mean_diff.pdf')
-        plt.close()
+            heatmap = (f_distance_norm.reshape(14, 14))
+            plt.imshow(heatmap, cmap="rainbow")
+            plt.colorbar()
+            plt.title(f"Heatmap of F-Distance \n {score_name}")
+            plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/f-distance.pdf')
+            plt.close()
 
-        heatmap = (f_distance_norm.reshape(14, 14))
-        plt.imshow(heatmap, cmap="rainbow")
-        plt.colorbar()
-        plt.title(f"Heatmap of F-Distance \n {score_name}")
-        plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/f-distance.pdf')
-        plt.close()
-
-        heatmap = (kl_divergence_norm.reshape(14, 14))
-        plt.imshow(heatmap, cmap="rainbow")
-        plt.colorbar()
-        plt.title(f"Heatmap of KL-Divergence \n {score_name}")
-        plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/kl-divergence.pdf')
-        plt.close()
+            heatmap = (kl_divergence_norm.reshape(14, 14))
+            plt.imshow(heatmap, cmap="rainbow")
+            plt.colorbar()
+            plt.title(f"Heatmap of KL-Divergence \n {score_name}")
+            plt.savefig(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}/kl-divergence.pdf')
+            plt.close()
 
         elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time()-start_time_i))
         print(f'Excution Time for Class {class_id} ({class_label}): {elapsed}!')
 
+    print(
+        f'mean_diff_mean_results: mean={np.mean(mean_diff_mean_results):.6f}, '
+        f'std={np.std(mean_diff_mean_results):.6f}'
+    )
 
     results_dict = {'mean_diff_results': mean_diff_results, 'f_distance_results': f_distance_results,
                  'kl_divergence_results': kl_divergence_results, 'mean_diff_max_results': mean_diff_max_results,
@@ -183,8 +187,8 @@ def main(args):
     for i in mean_10_labels_kl_divergence:
         print(f"  index={i}, label={labels[i]}")
 
-
-
+    elapsed = time.strftime("%H:%M:%S", time.gmtime(time.time() - start_time))
+    print(f'Excution Time: {elapsed}!')
 
 
 if __name__ == '__main__':
@@ -192,6 +196,7 @@ if __name__ == '__main__':
     parser.add_argument('--exp', type=str, default='imagenet_exp', help='experiment name')
     parser.add_argument('--real_dir', type=str, default='/Users/yifanlu/Downloads/imagenet256',)
     parser.add_argument('--gen_dir', type=str, default='/Users/yifanlu/Downloads/Imagenet256-LDM')  #/Users/yifanlu/Downloads/Imagenet256-BigGAN/530  # /Users/yifanlu/Downloads/Imagenet256-LDM/530  # /Users/yifanlu/Downloads/imagenet256-StyleGAN-XL/530
+    parser.add_argument('--visualize', action='store_true')
 
     args = parser.parse_args()
     main(args)
