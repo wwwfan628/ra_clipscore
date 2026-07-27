@@ -219,7 +219,7 @@ python main_celeba_classification_coop.py
 python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
 -----------
 ### Rerun ablation study
-python 
+python main_ablation_study.py --score_type EvalCS_local_vit --mode without_dual_prompts # full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine
 
 
 

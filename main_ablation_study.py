@@ -85,7 +85,7 @@ def main(args):
 
     text_list = utils.load_candidate(experiment_name=f"{args.exp}_{args.n_attr}", n_attr=args.n_attr)
 
-    if 'vit' in args.score_type or (('rn' in args.score_type) and (args.mode != 'without_dual_prompts')):
+    if (('vit' in args.score_type) and (args.mode != 'without_dual_prompts')) or (('rn' in args.score_type) and (args.mode != 'without_dual_prompts')):
         text_list_prompt = [f"This is a photo without {item}." for item in text_list] + [f"This is a photo of {item}." for item in text_list]
     elif args.score_type == 'clip_score' or args.score_type == 'hcs' or args.mode == 'without_dual_prompts':
         text_list_prompt = [f"This is a photo of {item}." for item in text_list]
