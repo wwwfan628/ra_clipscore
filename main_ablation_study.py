@@ -97,7 +97,8 @@ def main(args):
     attrs = ["Black_Hair", "Eyeglasses", "Male", "Smiling"]
     # calculate scores
     if 'vit' in args.score_type:
-        scores, scores_per_patch, labels = core.get_evalcs_local_vit_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size) # [n_img, n_attr]  [n_img, 196, n_attr]
+        # mode: full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine
+        scores, scores_per_patch, labels = core.get_evalcs_local_vit_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size, mode=args.mode) # [n_img, n_attr]  [n_img, 196, n_attr]
     elif 'rn' in args.score_type:
         # mode: full, without_dual_prompts, without_local_features, without_global_embeddings
         scores, labels = core.get_evalcs_local_rn_with_labels(img_dir=args.img_dir, anno_file=args.anno_file, attrs=attrs, text_list_prompt=text_list_prompt, batch_size=args.batch_size, mode=args.mode)
@@ -170,8 +171,8 @@ if __name__ == '__main__':
     parser.add_argument('--ref_img_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img', help='celeba 50k')  # /home/x_yiflu/dataset/Datasets/Multiclasses_Classification/CelebA50k/Img  /Users/yifanlu/Downloads/face50k_furniture15k/Img
     parser.add_argument('--anno_file', type=str, default='/home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt', help='celeba50k_furniture15k annotation file path')  # /home/x_yiflu/dataset/Datasets/Ablation_Study/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt  /Users/yifanlu/Downloads/face50k_furniture15k/Anno/list_attr_celeba50k_furniture15k.txt
     parser.add_argument('--n_attr', type=int, default=4, help='number of attributes to calculate SaD and PaD')
-    parser.add_argument('--score_type', type=str, default='EvalCS_local_rn', help='score type, e.g. hcs, clip_score, EvalCS_local_vit, EvalCS_local_rn')
-    parser.add_argument('--mode', type=str, default='full', help='choose from: full, without_dual_prompts, without_local_features, without_global_embeddings')
+    parser.add_argument('--score_type', type=str, default='EvalCS_local_vit', help='score type, e.g. hcs, clip_score, EvalCS_local_vit, EvalCS_local_rn')
+    parser.add_argument('--mode', type=str, default='full', help='choose from: full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine')
     parser.add_argument('--batch_size', type=int, default=1024, help='batch size to extract image features')
 
     args = parser.parse_args()

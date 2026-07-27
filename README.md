@@ -215,8 +215,11 @@ python celeba_50k.py # create 1k dataset
 python train_eval_coop.py --exp 'celebA' --dataset_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/face1k_furniture1k --n_attr 3 --attr_type 'USER' --num_epochs 200
 python main_celeba_classification_coop.py
 -----------
+### Rerun spatial evaluation experiment
 python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
-
+-----------
+### Rerun ablation study
+python 
 
 
 
