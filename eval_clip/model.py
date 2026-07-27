@@ -853,7 +853,7 @@ class CLIP_ViT_Local(nn.Module):
         return scores, scores_per_patch
 
     def compute_scores_without_dual_prompts(self, image, text):
-        print("computing scores without dual prompts")
+        # print("computing scores without dual prompts")
         image_features, attn_weight_list = self.encode_image(image, attn_mask=1)
         text_features = self.encode_text(text)
 
@@ -877,7 +877,7 @@ class CLIP_ViT_Local(nn.Module):
         return output_refined, output_refined_per_patch
 
     def compute_scores_without_local_features(self, image, text):
-        print("computing scores without local features")
+        # print("computing scores without local features")
         image_features, attn_weight_list = self.encode_image(image, attn_mask=1)
         text_features = self.encode_text(text)
 
@@ -904,7 +904,7 @@ class CLIP_ViT_Local(nn.Module):
         return scores, scores_per_patch
 
     def compute_scores_without_global_embeddings(self, image, text):
-        print("computing scores without global embeddings")
+        # print("computing scores without global embeddings")
         image_features, attn_weight_list = self.encode_image(image, attn_mask=1, global_embeddings=False)
         text_features = self.encode_text(text)
 
@@ -941,7 +941,7 @@ class CLIP_ViT_Local(nn.Module):
         return scores, scores_per_patch
 
     def compute_scores_without_attn_refine(self, image, text):
-        print("computing scores without attn refine")
+        # print("computing scores without attn refine")
         image_features, attn_weight_list = self.encode_image(image, attn_mask=1)
         text_features = self.encode_text(text)
 
