@@ -883,6 +883,7 @@ class CLIP_ViT_Local(nn.Module):
 
         # normalized features
         # image_features = image_features / image_features.norm(dim=-1, keepdim=True)  # [n_batch, 197, 512]
+        num_local_patches = image_features.shape[1] - 1
         image_features = (image_features / image_features.norm(dim=-1, keepdim=True))[:, 0, :]  # [n_batch, 512]
         text_features = text_features / text_features.norm(dim=-1, keepdim=True)  # [2 * n_attr, 512]
 
@@ -896,7 +897,11 @@ class CLIP_ViT_Local(nn.Module):
         Softmax = torch.nn.Softmax(dim=1)
         scores = Softmax(logits).cpu()[:, 1]  # [5000, 22]
 
-        return scores, None
+        # This ablation has no local-feature scores. Keep the standard return
+        # shape so downstream batch collection can use the same code path.
+        scores_per_patch = scores.new_zeros((b, num_local_patches, c // 2))
+
+        return scores, scores_per_patch
 
     def compute_scores_without_global_embeddings(self, image, text):
         print("computing scores without global embeddings")
