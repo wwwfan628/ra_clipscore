@@ -20,39 +20,39 @@ def compute_single_attr(class_id, class_label, real_dir, gen_dir, save_dir):
 
     text_features = core.get_text_features_eval_clip_local_vit(text_list_prompt)  # [44, 512]
 
-    if os.path.exists(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl') and os.path.exists(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl'):
-        with open(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl', 'rb') as f:
-            img_features_real = pickle.load(f)
-        with open(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl', 'rb') as f:
-            attn_weight_list_real = pickle.load(f)
-    else:
-        img_features_real, attn_weight_list_real = core.get_img_features_eval_clip_local_vit(img_dir=dataset_real_path, batch_size=1000)
-        with open(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl', 'wb') as f:
-            pickle.dump(img_features_real, f)
-        with open(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl', 'wb') as f:
-            pickle.dump(attn_weight_list_real, f)
-
-    if os.path.exists(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl') and os.path.exists(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl'):
-        with open(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl', 'rb') as f:
-            img_features_gen = pickle.load(f)
-        with open(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl', 'rb') as f:
-            attn_weight_list_gen = pickle.load(f)
-    else:
-        img_features_gen, attn_weight_list_gen = core.get_img_features_eval_clip_local_vit(img_dir=dataset_gen_path, batch_size=1000)
-        with open(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl', 'wb') as f:
-            pickle.dump(img_features_gen, f)
-        with open(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl', 'wb') as f:
-            pickle.dump(attn_weight_list_gen, f)
+    # if os.path.exists(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl') and os.path.exists(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl'):
+    #     with open(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl', 'rb') as f:
+    #         img_features_real = pickle.load(f)
+    #     with open(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl', 'rb') as f:
+    #         attn_weight_list_real = pickle.load(f)
+    # else:
+    #     img_features_real, attn_weight_list_real = core.get_img_features_eval_clip_local_vit(img_dir=dataset_real_path, batch_size=1000)
+    #     with open(f'{save_dir}/img_features/{dataset_real}/{class_id}.pkl', 'wb') as f:
+    #         pickle.dump(img_features_real, f)
+    #     with open(f'{save_dir}/attn_weight/{dataset_real}/{class_id}.pkl', 'wb') as f:
+    #         pickle.dump(attn_weight_list_real, f)
+    #
+    # if os.path.exists(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl') and os.path.exists(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl'):
+    #     with open(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl', 'rb') as f:
+    #         img_features_gen = pickle.load(f)
+    #     with open(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl', 'rb') as f:
+    #         attn_weight_list_gen = pickle.load(f)
+    # else:
+    #     img_features_gen, attn_weight_list_gen = core.get_img_features_eval_clip_local_vit(img_dir=dataset_gen_path, batch_size=1000)
+    #     with open(f'{save_dir}/img_features/{dataset_gen}/{class_id}.pkl', 'wb') as f:
+    #         pickle.dump(img_features_gen, f)
+    #     with open(f'{save_dir}/attn_weight/{dataset_gen}/{class_id}.pkl', 'wb') as f:
+    #         pickle.dump(attn_weight_list_gen, f)
 
     # calculate scores
-    scores_real = core.get_evalcs_local_vit(img_features_real, text_features, attn_weight_list_real).detach().cpu().numpy()  # [n_batch, 197, n_attr]
-    scores_gen = core.get_evalcs_local_vit(img_features_gen, text_features, attn_weight_list_gen).detach().cpu().numpy()  # [n_batch, 197, n_attr]
+    _, scores_real = core.get_evalcs_local_vit(dataset_real_path, text_list_prompt).detach().cpu().numpy()  # [n_batch, 196, n_attr]
+    _, scores_gen = core.get_evalcs_local_vit(dataset_gen_path, text_list_prompt).detach().cpu().numpy()  # [n_batch, 196, n_attr]
 
     # compute empirical mean and empirical covariance matrix, then convert GPU tensor to CPU numpy array
-    scores_mean_real = scores_real.mean(axis=0)[1:]  # [197, n_attr]
-    scores_mean_gen = scores_gen.mean(axis=0)[1:]  # [197, n_attr]
-    scores_var_real = scores_real.var(axis=0)[1:]
-    scores_var_gen = scores_gen.var(axis=0)[1:]
+    scores_mean_real = scores_real.mean(axis=0)  # [196, n_attr]
+    scores_mean_gen = scores_gen.mean(axis=0)  # [196, n_attr]
+    scores_var_real = scores_real.var(axis=0)
+    scores_var_gen = scores_gen.var(axis=0)
 
     mean_diff = (scores_mean_real - scores_mean_gen)[:, 0]  # [196, n_attr]
     f_distance = (np.square(scores_mean_real - scores_mean_gen) + scores_var_real + scores_var_gen - 2 * np.sqrt(scores_var_real * scores_var_gen))[:, 0]
@@ -65,10 +65,10 @@ def main(args):
     start_time = time.time()
     dataset_real = os.path.basename(args.real_dir)
     dataset_gen = os.path.basename(args.gen_dir)
-    os.makedirs(f'results_dir/{args.exp}/img_features/{dataset_real}', exist_ok=True)
-    os.makedirs(f'results_dir/{args.exp}/attn_weight/{dataset_real}', exist_ok=True)
-    os.makedirs(f'results_dir/{args.exp}/img_features/{dataset_gen}', exist_ok=True)
-    os.makedirs(f'results_dir/{args.exp}/attn_weight/{dataset_gen}', exist_ok=True)
+    # os.makedirs(f'results_dir/{args.exp}/img_features/{dataset_real}', exist_ok=True)
+    # os.makedirs(f'results_dir/{args.exp}/attn_weight/{dataset_real}', exist_ok=True)
+    # os.makedirs(f'results_dir/{args.exp}/img_features/{dataset_gen}', exist_ok=True)
+    # os.makedirs(f'results_dir/{args.exp}/attn_weight/{dataset_gen}', exist_ok=True)
 
     # path definition, creat directory if not exists
     mean_diff_results = []
@@ -93,7 +93,6 @@ def main(args):
     for class_id in range(1000):
         start_time_i = time.time()
         class_label = labels[class_id]
-        os.makedirs(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}', exist_ok=True)
         mean_diff, f_distance, kl_divergence = compute_single_attr(class_id, class_label, args.real_dir, args.gen_dir, f'results_dir/{args.exp}')
 
         mean_diff_results.append(mean_diff)
@@ -116,6 +115,7 @@ def main(args):
 
         if args.visualize == True:
             # Visualization
+            os.makedirs(f'results_dir/{args.exp}/{dataset_real}_vs_{dataset_gen}/{class_id}', exist_ok=True)
             score_name = 'dual prompts: first refine with attention, then softmax'
 
             heatmap = (mean_diff_norm.reshape(14, 14))
