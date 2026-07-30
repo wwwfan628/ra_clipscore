@@ -125,7 +125,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--exp', type=str, default='imagenet_eval_exp', help='experiment name')
-    parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/imagenet256/train',)
+    parser.add_argument('--real_dir', type=str, default='/home/x_yiflu/dataset/Datasets/imagenet256',)
     parser.add_argument('--gen_dir', type=str, default='/home/x_yiflu/dataset/Datasets/Imagenet256-LDM')  #/Users/yifanlu/Downloads/Imagenet256-BigGAN/530  # /Users/yifanlu/Downloads/Imagenet256-LDM/530  # /Users/yifanlu/Downloads/imagenet256-StyleGAN-XL/530
 
     args = parser.parse_args()
