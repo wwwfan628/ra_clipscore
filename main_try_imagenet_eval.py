@@ -26,15 +26,17 @@ def compute_single_attr(class_id, class_label, real_dir, gen_dir, save_dir):
     # compute empirical mean and empirical covariance matrix, then convert GPU tensor to CPU numpy array
     scores_mean_real = scores_real.mean(axis=0)  # [n_attr]
     scores_mean_gen = scores_gen.mean(axis=0)  # [n_attr]
-    scores_var_real = scores_real.var(axis=0)
-    scores_var_gen = scores_gen.var(axis=0)
+    # compute_single expects covariance matrices. Since this evaluation has only
+    # one attribute, np.cov returns a scalar; promote it to shape (1, 1).
+    scores_cov_real = np.atleast_2d(np.cov(scores_real, rowvar=False))
+    scores_cov_gen = np.atleast_2d(np.cov(scores_gen, rowvar=False))
 
     # mean_diff = (scores_mean_real - scores_mean_gen)[:, 0]  # [196, n_attr]
     # f_distance = (np.square(scores_mean_real - scores_mean_gen) + scores_var_real + scores_var_gen - 2 * np.sqrt(scores_var_real * scores_var_gen))[:, 0]
     # kl_divergence = (np.log(np.sqrt(scores_var_gen) / np.sqrt(scores_var_real)) + ((scores_var_real + np.square((scores_mean_real - scores_mean_gen))) / (2 * scores_var_gen)) - 0.5)[:, 0]
     # calculate different distribution distances
     forward_KL_single, reverse_KL_single, mean_difference_single, f_distance_single, mmd_polynomial_single, mmd_rbf_single = core.compute_single(scores_real, scores_gen, scores_mean_real, scores_mean_gen,
-                                                   scores_var_real, scores_var_gen, [class_label])
+                                                   scores_cov_real, scores_cov_gen, [class_label])
 
     return forward_KL_single, reverse_KL_single, mean_difference_single, f_distance_single, mmd_polynomial_single, mmd_rbf_single
 
