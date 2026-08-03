@@ -232,4 +232,7 @@ python evaluate_clip_coco_patches.py \
   --model ViT-B/16 \
   --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
   --images /proj/common-datasets/COCO/val2014
+------
+### ImageNet Eval
 
+python main_try_imagenet_eval.py --gen_dir /home/x_yiflu/dataset/Datasets/imagenet256-StyleGAN-XL
