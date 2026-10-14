@@ -1,4 +1,4 @@
-# interpretable_evaluation_metrics
+# RA-ClipScore: Making Generative Model Evaluation More Interpretable
 
 To run the experiments, use following command line
 ```
