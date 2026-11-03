@@ -27,6 +27,20 @@
   </a>
 </div>
 
+### BibTeX
+
+If you find our work useful, please consider citing:
+
+```
+@inproceedings{lu2026raclipscoremakinggenerativemodel,
+      title={RA-ClipScore: Making Generative Model Evaluation More Interpretable},
+      author={Yifan Lu and Taras Kucherenko and Hedvig Kjellström and Judith Bütepage},
+      year={2026},
+      booktitle={Neural Information Processing Systems},
+      url={https://arxiv.org/abs/2608.12088},
+}
+```
+
 -----
 
 ## Datasets Preparation
@@ -192,3 +206,6 @@ $ python gen_images.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://
 ```
 python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
 ```
+----
+## Acknowledgements
+We gratefully acknowledge access to the Berzelius computing resource at the National Supercomputer Centre, provided by the Knut and Alice Wallenberg Foundation. This work was supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP).
