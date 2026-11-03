@@ -1,9 +1,33 @@
-# interpretable_evaluation_metrics
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+    <a>
+    <img src="figs/KTH_logo.png" width="40"/>
+    <img src="figs/ea-logo.png" width="65"/>
+    <img src="figs/kblab.png" width="35"/>
+  </a>
 
-To run the experiments, use following command line
-```
-$ nohup sh run.sh &
-```
+  <h3 align="center">NeurIPS 2026 <br /> RA-ClipScore: Making Generative Model Evaluation More Interpretable</h3>
+
+  <p align="center">
+    Yifan Lu, Taras Kucherenko, Hedvig Kjellström, Judith Bütepage
+    <br />
+    <a href="https://arxiv.org/pdf/2608.12088">Paper</a>
+    &middot;
+    <a href="https://wwwfan628.github.io/ra-clipscore/">Project Page</a>
+    &middot;
+    <a href="https://openreview.net/forum?id=P82JofgITl&noteId=y1Pue46aJb">OpenReview</a>
+  </p>
+</div>
+
+
+<div align="center">
+    <a>
+    <img src="figs/ra-clipscore-teaser.webp" width="500"/>
+  </a>
+</div>
+
+-----
 
 ## Datasets Preparation
 
@@ -164,75 +188,7 @@ $ python gen_images.py --outdir=out --trunc=1 --seeds=0-49999 --network=https://
 
 
 ### 5) Spatial Evaluation of SOTA Generative Models (ImageNet)
+- Run spatial evaluation with command
+```
 python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
-
-Rebuttal
--------
-### Compute #params, #FLOPs
-CLIP
-python profile_inference.py \
-  --model "ViT-B/32" \
-  --image-batch-size 1 \
-  --text-batch-size 1
-
-
-CLIP-FlanT5
-python scripts/profile_inference.py \
-  --model-path zhiqiulin/clip-flant5-xl \
-  --image-file images/example1.jpg \
-  --query "Describe this image." \
-  --decoder-length 32 \
-  --show-table
-
-BLIP-VQA
-python profile_blip_vqa.py --image merlion.png --question "Which city is this photo taken?" --device cuda
-
-MiniGPT4
-python eval_scripts/profile_vqa_flops.py --cfg-path eval_configs/minigpt4_eval.yaml --image merlion.png --question "What is shown in this image?" --show-table
-
-mPLUG
-python profile_vqa_flops.py   --config configs/vqa_mplug_base.yaml   --device cuda   --batch-size 1   --question-length 25   --answer-length 10   --beam-size 5
-
-ShareGPT4V
-python scripts/profile_vqa_flops.py   --model-path ./ShareGPT4V-7B   --image examples/photo.png   --question "What is shown in this image?"
-----------
-### CLIP negative prompt
-In CLIP folder locally:
- python prompt_direction_similarity.py ./figs_age/old.jpg ./figs_age/old1.jpg ./figs_age/old2.jpg ./figs_age/old3.jpg --positive 'young' --negative 'not young'
-----------
-### Action attribute
-Stanford40 Action Classification
-python main_stanford40_classification.py --score_type clip_score
-python main_stanford40_classification.py --score_type hcs
-python main_stanford40_classification.py --score_type EvalCS_local_vit
-----------
-### Different textual prompt
-python main_dataset_compare_prompt.py --prompt_id 1 # about 1h for each prompt
-pythonc alculate_prompt_ranking_agreement.py --results_dir ./results_dir/prompt_20_EvalCS_local_rn/A_vs_C
------------
-### Soft-Prompts
-python celeba_50k.py # create 1k dataset
-python train_eval_coop.py --exp 'celebA' --dataset_dir /proj/berzelius-2024-331/users/x_yiflu/dataset/Datasets/face1k_furniture1k --n_attr 3 --attr_type 'USER' --num_epochs 200
-python main_celeba_classification_coop.py
------------
-### Rerun spatial evaluation experiment
-python main_try_local_vit_imagenet.py --real_dir /home/x_yiflu/dataset/Datasets/imagenet256 --gen_dir /home/x_yiflu/dataset/Datasets/Imagenet256-BigGAN
------------
-### Rerun ablation study
-python main_ablation_study.py --score_type EvalCS_local_vit --mode without_dual_prompts # full, without_dual_prompts, without_local_features, without_global_embeddings, without_attn_refine
-python main_ablation_study_rebuttal.py --score_type EvalCS_local_vit --mode without_dual_prompts --attr_type all # all, global, local
-----------
-### COCO Localization
-python evaluate_raclip_coco_patches.py \
-  --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
-  --images /proj/common-datasets/COCO/val2014 \
-
-copy evaluate_clip_coco_patches.py to CLIP folder
-python evaluate_clip_coco_patches.py \
-  --model ViT-B/16 \
-  --annotations /proj/common-datasets/COCO/annotations/instances_val2014.json \
-  --images /proj/common-datasets/COCO/val2014
-------
-### ImageNet Eval
-
-python main_try_imagenet_eval.py --gen_dir /home/x_yiflu/dataset/Datasets/imagenet256-StyleGAN-XL
+```
