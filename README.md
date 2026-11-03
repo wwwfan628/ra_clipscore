@@ -23,7 +23,7 @@
 
 <div align="center">
     <a>
-    <img src="figs/ra-clipscore-teaser.webp" width="500"/>
+    <img src="figs/ra-clipscore-teaser.webp" width="800"/>
   </a>
 </div>
 
